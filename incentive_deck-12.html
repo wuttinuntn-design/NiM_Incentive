@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NiM Express — Incentive System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F4F0E8;
+    --ink:#241F1A;
+    --terracotta:#E07A52;
+    --terracotta-dark:#C75F3B;
+    --gold:#E8A33D;
+    --green:#5E9C76;
+    --green-bg:#E3EFE6;
+    --blue-bg:#E5EEF7;
+    --blue:#5A87B8;
+    --yellow-bg:#FBF1DE;
+    --red-bg:#F7E3DE;
+    --red:#D9684A;
+    --grey-bg:#EAE7E1;
+    --grey:#8A8478;
+    --card:#FFFFFF;
+    --dark-card:#241F1A;
+    --line:#E0DACD;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    background:var(--ink);
+    font-family:'IBM Plex Sans Thai','Inter',sans-serif;
+    color:var(--ink);
+    overflow:hidden;
+  }
+  .deck{
+    width:100vw; height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+  }
+  .stage{
+    width:min(100vw, 177.78vh);
+    height:min(100vh, 56.25vw);
+    background:var(--cream);
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 0 60px rgba(0,0,0,.4);
+  }
+  .slide{
+    position:absolute; inset:0;
+    display:none;
+    flex-direction:column;
+    padding: 2.4% 4.2% 0 4.2%;
+  }
+  .slide.active{display:flex;}
+  .topbar{
+    position:absolute; top:0; left:0; right:0; height:.7%;
+    background:var(--terracotta);
+  }
+  .header{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom: 1%;
+  }
+  .brand{display:flex; align-items:center; gap:.8vw;}
+  .logo{
+    width:2.7vw; height:2.7vw; min-width:30px; min-height:30px;
+    background:var(--terracotta); border-radius:14%;
+    display:flex; align-items:center; justify-content:center;
+    color:white; font-weight:800; font-size:1.534vw;
+  }
+  .brand-text .name{font-weight:700; font-size:1.416vw; line-height:1.1; color:var(--ink);}
+  .brand-text .sub{font-size:0.92vw; color:var(--grey); line-height:1.1;}
+  .pagenum{font-size:1.062vw; color:var(--ink); font-weight:500; font-family:'Inter',sans-serif;}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:.5vw;
+    background:#F7DDD0; color:var(--terracotta-dark);
+    font-weight:600; font-size:1.003vw;
+    padding:.4vw 1.1vw; border-radius:999px;
+    margin-bottom:1%;
+    width:fit-content;
+  }
+  .eyebrow .dot{width:.4vw; height:.4vw; border-radius:50%; background:var(--terracotta-dark);}
+  h1{
+    font-size:3.186vw; line-height:1.12; font-weight:700;
+    margin-bottom:.7%;
+    letter-spacing:-.01em;
+  }
+  h1 .accent{color:var(--terracotta);}
+  .subtitle{font-size:1.18vw; color:#5b554a; margin-bottom:.8%;}
+  .hr{height:1px; background:var(--line); margin-bottom:1%;}
+  .content{flex:1; display:flex; flex-direction:column; gap:.7%; overflow:hidden; min-height:0;}
+  .footer{
+    position:absolute; left:0; right:0; bottom:0;
+    height:4.6%;
+    background:var(--ink);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 4.2%;
+    color:#cfc9bd; font-size:1.003vw;
+  }
+  .footer .dot-brand{display:flex; align-items:center; gap:.5vw;}
+  .footer .dot-brand .d{width:.35vw;height:.35vw;border-radius:50%;background:var(--terracotta);}
+
+  /* Generic building blocks */
+  .section-label{font-size:1.239vw; font-weight:700; margin-bottom:.4%;}
+  .stat-grid{display:grid; gap:.8%;}
+  .stat-card{
+    background:var(--card); border-radius:16px; padding:1.1% 1.5%;
+    box-shadow:0 1px 0 rgba(0,0,0,.03);
+    border-bottom:4px solid var(--terracotta);
+  }
+  .stat-card.gold{border-bottom-color:var(--gold);}
+  .stat-num{font-size:3.068vw; font-weight:800; color:var(--terracotta); line-height:1; font-family:'Inter',sans-serif;}
+  .stat-card.gold .stat-num{color:var(--gold);}
+  .stat-label{font-size:1.086vw; font-weight:600; margin-top:.4%;}
+  .stat-sub{font-size:0.885vw; color:var(--grey); margin-top:.15%;}
+
+  .cause-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1%;}
+  .cause-card{
+    background:var(--dark-card); border-radius:14px; padding:1% 1.2%;
+    color:white;
+  }
+  .cause-icon{
+    width:2.478vw; height:2.478vw; border-radius:9px;
+    background:#3a322a; display:flex; align-items:center; justify-content:center;
+    color:var(--terracotta); margin-bottom:.5vw; padding:.55vw;
+  }
+  .cause-icon svg{width:100%; height:100%; stroke:currentColor; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .cause-title{font-weight:700; font-size:1.121vw; margin-bottom:.2vw;}
+  .cause-sub{font-size:0.885vw; color:#bdb6a8; line-height:1.3;}
+
+  .callout{
+    background:var(--terracotta); color:white; border-radius:14px;
+    padding:.9% 1.5%; display:flex; align-items:center; gap:1vw;
+    font-weight:600; font-size:1.121vw;
+  }
+  .callout-icon{width:1.6vw; height:1.6vw; min-width:1.6vw; stroke:white; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+
+  /* Two-column compare */
+  .two-col{display:grid; grid-template-columns:1fr 1fr; gap:1%; flex:1; min-height:0;}
+  .colcard{border-radius:16px; overflow:hidden; display:flex; flex-direction:column; background:var(--card);}
+  .colcard .head{padding:.7% 1.1%;}
+  .colcard.branch .head{background:var(--terracotta); color:white;}
+  .colcard.driver .head{background:var(--dark-card); color:white;}
+  .colcard .tag{font-size:0.826vw; font-weight:600; opacity:.85; letter-spacing:.05em;}
+  .colcard .ctitle{font-size:1.475vw; font-weight:700; margin-top:.1vw;}
+  .colcard .csub{font-size:0.885vw; opacity:.85; margin-top:.1vw;}
+  .colcard .body{padding:.6% 1.1%; flex:1; display:flex; flex-direction:column; gap:.4%; justify-content:space-evenly;}
+  .li-item .t{font-weight:700; font-size:1.038vw;}
+  .li-item .d{font-size:0.85vw; color:var(--grey);}
+
+  .flow-row{display:flex; align-items:center; gap:.6%; background:var(--card); border-radius:14px; padding:.7% 1.3%; flex-shrink:0;}
+  .flow-step{display:flex; flex-direction:column; align-items:center; gap:.25vw; flex:1;}
+  .flow-icon{width:2.478vw; height:2.478vw; border-radius:10px; background:#F7DDD0; display:flex; align-items:center; justify-content:center; color:var(--terracotta-dark); padding:.55vw;}
+  .flow-icon svg{width:100%; height:100%; stroke:currentColor; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .flow-label{font-weight:700; font-size:0.968vw;}
+  .flow-sub{font-size:0.802vw; color:var(--grey);}
+  .flow-arrow{color:#c9c2b3; font-size:1.298vw;}
+
+  .scope-bar{
+    background:#F7DDD0; border-radius:14px; padding:.65% 1.4%;
+    display:flex; align-items:center; gap:.8vw; font-size:1.038vw; font-weight:600; color:var(--terracotta-dark);
+    flex-shrink:0;
+  }
+
+  /* Model cards (slide 3) */
+  .model-row{display:flex; gap:1%; align-items:stretch;}
+  .model-card{flex:1; border-radius:14px; padding:.9% 1.2%; background:var(--card); border-left:6px solid var(--gold); display:flex; flex-direction:column; gap:.4%;}
+  .model-card.m2{border-left-color:var(--terracotta);}
+  .model-card.m3{border-left-color:var(--green);}
+  .model-tagrow{display:flex; align-items:center; justify-content:space-between;}
+  .model-num{font-size:0.802vw; font-weight:700; color:var(--grey); letter-spacing:.08em;}
+  .model-badge{font-size:0.732vw; font-weight:700; padding:.2vw .7vw; border-radius:999px; background:var(--gold); color:white;}
+  .model-card.m2 .model-badge{background:var(--terracotta);}
+  .model-card.m3 .model-badge{background:var(--green);}
+  .model-title{font-size:1.298vw; font-weight:700; margin:.1vw 0;}
+  .model-formula{background:var(--cream); border-radius:9px; padding:.5vw .8vw; font-size:0.873vw; font-weight:600; line-height:1.3;}
+  .model-points{font-size:0.826vw; color:#5b554a; line-height:1.45;}
+
+  .path-box{background:var(--dark-card); border-radius:14px; padding:.8% 1.4%; color:white; display:flex; align-items:center; gap:1%;}
+  .path-tag{font-size:0.767vw; font-weight:700; color:#bdb6a8; letter-spacing:.08em; margin-bottom:.2vw;}
+  .path-step{flex:1; background:#34291f; border-radius:11px; padding:.6% 1%;}
+  .path-step.s1{background:var(--terracotta);}
+  .path-title{font-weight:700; font-size:1.086vw;}
+  .path-sub{font-size:0.85vw; opacity:.85;}
+
+  /* KPI grade row */
+  .grade-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:.8%;}
+  .grade-card{border-radius:13px; padding:.5% 0; text-align:center;}
+  .grade-card.a{background:var(--green-bg);} .grade-card.b{background:var(--blue-bg);}
+  .grade-card.c{background:var(--yellow-bg);} .grade-card.d{background:var(--red-bg);}
+  .grade-card.f{background:var(--grey-bg);}
+  .grade-letter{font-size:2.242vw; font-weight:800; font-family:'Inter',sans-serif;}
+  .grade-card.a .grade-letter{color:var(--green);} .grade-card.b .grade-letter{color:var(--blue);}
+  .grade-card.c .grade-letter{color:#C99A30;} .grade-card.d .grade-letter{color:var(--red);}
+  .grade-card.f .grade-letter{color:var(--grey);}
+  .grade-pt{font-size:0.85vw; font-weight:600; margin-top:.1vw;}
+  .grade-result{font-size:0.802vw; font-weight:700; margin-top:.05vw;}
+  .grade-sub{font-size:0.732vw; color:var(--grey);}
+  .grade-bar{width:80%; height:5px; background:rgba(0,0,0,.08); border-radius:999px; margin:.4vw auto 0; overflow:hidden;}
+  .grade-bar-fill{height:100%; border-radius:999px;}
+
+  /* Grade comparison row (slide: ทุก Grade) */
+  .grade-compare-row{display:grid; grid-template-columns:1.3fr 1fr 1fr 1fr 1fr 1fr; gap:.8%; align-items:center; background:var(--card); border-radius:14px; padding:1% 1.4%;}
+  .gc-label{font-weight:700; font-size:1.062vw;}
+  .gc-sub{font-weight:500; font-size:0.797vw; color:var(--grey);}
+  .gc-cell{text-align:center; border-radius:10px; padding:.5vw 0; font-size:0.85vw; font-weight:600; color:var(--grey);}
+  .gc-cell b{font-size:1.062vw; display:block; margin-top:.1vw;}
+  .gc-cell.a{background:var(--green-bg); color:var(--green);}
+  .gc-cell.b{background:var(--blue-bg); color:var(--blue);}
+  .gc-cell.c{background:var(--yellow-bg); color:#C99A30;}
+  .gc-cell.d{background:var(--red-bg); color:var(--red);}
+  .gc-cell.f{background:var(--grey-bg); color:var(--grey);}
+
+  .kpi-table-row{display:flex; flex-direction:column; gap:.2%; background:var(--card); border-radius:10px; padding:.4% .8%;}
+  .kpi-table-row .name{font-weight:700; font-size:1.003vw;}
+  .kpi-table-row .formula{font-size:0.826vw; color:var(--grey);}
+  .kpi-tag{display:inline-block; font-size:0.755vw; font-weight:700; padding:.14vw .55vw; border-radius:999px; background:var(--green-bg); color:var(--green); margin-top:.2vw; width:fit-content;}
+  .kpi-tag.flex{background:var(--blue-bg); color:var(--blue);}
+
+  /* Branch size slide */
+  .size-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1%;}
+  .size-card{background:var(--card); border-radius:16px; padding:1.2% 1.4%; text-align:center; border-top:5px solid var(--terracotta);}
+  .size-card.m{border-top-color:var(--gold);}
+  .size-card.l{border-top-color:var(--green);}
+  .size-tag{font-size:1.003vw; font-weight:700; color:var(--grey);}
+  .size-name{font-size:1.888vw; font-weight:800; font-family:'Inter',sans-serif; margin:.2vw 0;}
+  .size-desc{font-size:1.003vw; color:#5b554a;}
+
+  .factor-row{display:flex; gap:.8%;}
+  .factor-chip{flex:1; background:var(--card); border-radius:12px; padding:.6% 1%; display:flex; align-items:center; gap:.6vw;}
+  .factor-chip .ic{width:1.6vw; height:1.6vw; min-width:1.6vw; color:var(--terracotta-dark);}
+  .factor-chip .ic svg{width:100%; height:100%; stroke:currentColor; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .factor-chip .label{font-size:0.944vw; font-weight:600;}
+
+  .option-card{background:var(--card); border-radius:13px; padding:.8% 1.2%; border:1.5px solid var(--line);}
+  .option-card .otitle{font-weight:700; font-size:1.086vw; margin-bottom:.15vw;}
+  .option-card .odesc{font-size:0.885vw; color:#5b554a;}
+
+  /* Sim checklist slide */
+  .checklist-grid{display:grid; grid-template-columns:1fr 1fr; gap:1%; flex:1;}
+  .check-card{background:var(--card); border-radius:16px; padding:1.3% 1.6%; display:flex; flex-direction:column;}
+  .check-card .chead{display:flex; align-items:center; gap:.6vw; margin-bottom:1%;}
+  .check-card .cicon{width:2.478vw; height:2.478vw; border-radius:9px; background:var(--terracotta); color:white; display:flex; align-items:center; justify-content:center; padding:.55vw;}
+  .check-card .cicon svg{width:100%; height:100%; stroke:currentColor; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+  .check-card .ctitle2{font-weight:700; font-size:1.357vw;}
+  .check-list{list-style:none; display:flex; flex-direction:column; gap:.9vw;}
+  .check-list li{font-size:1.121vw; display:flex; gap:.5vw; align-items:flex-start; color:#3b362d; line-height:1.45;}
+  .check-list li::before{content:"—"; color:var(--terracotta); font-weight:700;}
+
+  /* Roadmap slide reuse */
+  .step-row{display:flex; gap:1%; flex:1; min-height:0;}
+  .step-card{flex:1; border-radius:14px; background:var(--card); overflow:hidden; display:flex; flex-direction:column;}
+  .step-head{padding:.6% 1%; color:white; font-size:0.826vw; font-weight:700; letter-spacing:.05em;}
+  .step-card.s1 .step-head{background:var(--gold);}
+  .step-card.s2 .step-head{background:var(--terracotta);}
+  .step-card.s3 .step-head{background:var(--green);}
+  .step-title{font-size:1.239vw; font-weight:700; padding:.7% 1% 0;}
+  .step-date{display:inline-block; margin:.3% 1% .6%; font-size:0.767vw; font-weight:700; padding:.18vw .75vw; border-radius:999px; background:var(--cream); width:fit-content;}
+  .step-body{padding:.2% 1% 1%; flex:1;}
+  .step-body ul{list-style:none; display:flex; flex-direction:column; gap:.6vw;}
+  .step-body li{font-size:0.92vw; color:#3b362d; display:flex; gap:.4vw; line-height:1.35;}
+  .step-body li::before{content:"•"; color:var(--terracotta);}
+
+  .timeline-bar{display:flex; border-radius:10px; overflow:hidden; height:1.7vw;}
+  .tl-seg{display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:0.885vw;}
+  .tl-seg.g{background:var(--gold); flex:1;}
+  .tl-seg.t{background:var(--terracotta); flex:1.3;}
+  .tl-seg.gr{background:var(--green); flex:1.6;}
+  .tl-dates{display:flex; margin-top:.2%;}
+  .tl-dates span{flex:1; font-size:0.802vw; color:var(--grey); text-align:center;}
+  .tl-dates span:nth-child(2){flex:1.3;}
+  .tl-dates span:nth-child(3){flex:1.6;}
+
+  .approve-box{background:var(--dark-card); border-radius:14px; padding:.7% 1.3%; color:white;}
+  .approve-title{font-weight:700; font-size:1.086vw; margin-bottom:.4%;}
+  .approve-grid{display:grid; grid-template-columns:1fr 1fr; gap:.4%;}
+  .approve-item{display:flex; gap:.5vw; align-items:flex-start;}
+  .approve-num{width:1.2vw; height:1.2vw; min-width:1.2vw; border-radius:50%; background:var(--terracotta); display:flex; align-items:center; justify-content:center; font-size:0.767vw; font-weight:700;}
+  .approve-item .at{font-weight:700; font-size:0.897vw;}
+  .approve-item .ad{font-size:0.779vw; color:#bdb6a8;}
+
+  /* status banner reused style for new content slides */
+  .status-pill{display:inline-flex; align-items:center; gap:.5vw; background:var(--yellow-bg); color:#8a6a1f; font-weight:700; font-size:1.003vw; padding:.4vw 1vw; border-radius:999px; margin-bottom:1%;}
+
+  /* nav controls */
+  .nav{
+    position:fixed; bottom:2vh; left:50%; transform:translateX(-50%);
+    display:flex; gap:8px; z-index:50;
+  }
+  .nav button{
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); color:white;
+    border-radius:8px; padding:8px 16px; font-size:13.0px; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .nav button:hover{background:rgba(255,255,255,.25);}
+  .dots{position:fixed; top:2vh; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:50;}
+  .dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.3);}
+  .dots span.on{background:var(--terracotta);}
+
+  /* SVG icon system - Lucide style line icons */
+  .icon{display:inline-block; vertical-align:middle;}
+  .icon svg{width:100%; height:100%; stroke:currentColor; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round;}
+
+  /* ===== COVER / CLOSING — Dashboard mockup ===== */
+  .cover-slide{
+    background:linear-gradient(135deg, #1a1611 0%, #241F1A 55%, #2b2117 100%);
+    color:white; padding:0 !important; overflow:hidden; position:relative;
+    height:100%;
+  }
+  .cover-slide .topbar{background:linear-gradient(90deg, var(--terracotta), var(--gold));}
+  .cover-glow{position:absolute; width:38vw; height:38vw; border-radius:50%; background:radial-gradient(circle, rgba(224,122,82,.25), transparent 70%); top:-12vw; right:-8vw; pointer-events:none;}
+  .cover-glow2{position:absolute; width:30vw; height:30vw; border-radius:50%; background:radial-gradient(circle, rgba(232,163,61,.15), transparent 70%); bottom:-10vw; left:-6vw; pointer-events:none;}
+
+  .cover-inner{position:relative; z-index:2; height:100%; display:flex; flex-direction:column; padding:3% 4.2% 0 4.2%;}
+  .cover-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:.6%;}
+  .cover-eyebrow{display:inline-flex; align-items:center; gap:.5vw; background:rgba(224,122,82,.18); color:#f3a785; font-weight:600; font-size:0.9vw; padding:.4vw 1.1vw; border-radius:999px; width:fit-content; border:1px solid rgba(224,122,82,.35);}
+  .cover-h1{font-size:3.4vw; line-height:1.08; font-weight:800; margin:.8% 0 .3%; letter-spacing:-.01em;}
+  .cover-h1 .accent{color:var(--terracotta);}
+  .cover-h1 .accent2{color:var(--gold);}
+  .cover-sub{font-size:1.1vw; color:#cfc9bd; max-width:46vw;}
+
+  .mockup-frame{
+    flex:1; margin-top:1.3%; background:#16130f; border:1px solid #3a322a; border-radius:18px;
+    box-shadow:0 30px 70px -20px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.03) inset;
+    display:flex; flex-direction:column; overflow:hidden; min-height:0;
+  }
+  .mockup-titlebar{display:flex; align-items:center; gap:.5vw; padding:.6vw 1vw; background:#1c1812; border-bottom:1px solid #332c23;}
+  .mockup-dot{width:.55vw; height:.55vw; border-radius:50%;}
+  .mockup-titlebar-label{margin-left:.6vw; font-size:.78vw; color:#8a8478; font-family:'Inter',sans-serif;}
+  .mockup-body{flex:1; padding:1.1% 1.3%; display:flex; flex-direction:column; gap:1%; min-height:0;}
+
+  .mockup-toprow{display:flex; gap:1%; flex-shrink:0;}
+  .mockup-filter{background:#241f1a; border:1px solid #3a322a; border-radius:8px; padding:.4vw 1vw; font-size:.78vw; color:#cfc9bd; display:flex; align-items:center; gap:.4vw;}
+  .mockup-filter.on{background:var(--terracotta); color:white; border-color:var(--terracotta);}
+
+  .mockup-kpi-row{display:grid; grid-template-columns:repeat(4,1fr); gap:.8%; flex-shrink:0;}
+  .mockup-kpi{background:#1f1b16; border:1px solid #332c23; border-radius:12px; padding:.8% 1%;}
+  .mockup-kpi-label{font-size:.7vw; color:#8a8478; margin-bottom:.3vw;}
+  .mockup-kpi-val{font-size:1.5vw; font-weight:800; font-family:'Inter',sans-serif; color:white;}
+  .mockup-kpi-val.t{color:var(--terracotta);} .mockup-kpi-val.g{color:var(--gold);} .mockup-kpi-val.gr{color:#7bc99a;}
+  .mockup-kpi-trend{font-size:.66vw; margin-top:.2vw; display:flex; align-items:center; gap:.25vw;}
+  .mockup-kpi-trend.up{color:#7bc99a;} .mockup-kpi-trend.down{color:#e08a8a;}
+
+  .mockup-main{display:grid; grid-template-columns:1.3fr 1fr; gap:1%; flex:1; min-height:0;}
+  .mockup-panel{background:#1f1b16; border:1px solid #332c23; border-radius:12px; padding:.8% 1%; display:flex; flex-direction:column; min-height:0;}
+  .mockup-panel-title{font-size:.82vw; font-weight:700; color:#e8e3d8; margin-bottom:.5vw; display:flex; align-items:center; justify-content:space-between;}
+  .mockup-panel-title span.tag{font-size:.62vw; font-weight:600; color:#8a8478; background:#2b251d; padding:.15vw .6vw; border-radius:999px;}
+
+  .mockup-bars{height:9vw; display:flex; align-items:flex-end; gap:.7vw; padding:0 .2vw;}
+  .mockup-bar-col{flex:1; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:.3vw;}
+  .mockup-bar{width:100%; border-radius:4px 4px 0 0;}
+  .mockup-bar-label{font-size:.62vw; color:#8a8478;}
+
+  .mockup-list{display:flex; flex-direction:column; gap:.5vw; flex:1; justify-content:center;}
+  .mockup-list-row{display:flex; align-items:center; gap:.6vw; font-size:.74vw;}
+  .mockup-rank{width:1.3vw; height:1.3vw; border-radius:50%; background:#2b251d; color:#cfc9bd; display:flex; align-items:center; justify-content:center; font-size:.64vw; font-weight:700; flex-shrink:0;}
+  .mockup-rank.gold{background:var(--gold); color:#1f1b16;}
+  .mockup-list-name{flex:1; color:#e8e3d8; font-weight:600;}
+  .mockup-list-val{color:#7bc99a; font-weight:700; font-family:'Inter',sans-serif;}
+
+  .mockup-splitbar{display:flex; height:1.4vw; border-radius:7px; overflow:hidden; flex-shrink:0;}
+  .mockup-splitbar div{display:flex; align-items:center; justify-content:center; font-size:.66vw; font-weight:700; color:white;}
+
+  .cover-footer-row{display:flex; align-items:center; justify-content:space-between; margin-top:1.2%; padding-bottom:1.4%; flex-shrink:0;}
+  .cover-tag-list{display:flex; gap:.6vw;}
+  .cover-tag{font-size:.78vw; color:#cfc9bd; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); padding:.35vw 1vw; border-radius:999px;}
+  .cover-date{font-size:.85vw; color:#8a8478;}
+
+  .closing-cta{background:linear-gradient(90deg, var(--terracotta), #d9824f); border-radius:16px; padding:1% 1.6%; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; margin-top:1%;}
+  .closing-cta-text{font-size:1.1vw; font-weight:700; color:white;}
+  .closing-cta-sub{font-size:.78vw; color:rgba(255,255,255,.85); margin-top:.15vw;}
+  .closing-cta-arrow{width:2.2vw; height:2.2vw; border-radius:50%; background:rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .closing-cta-arrow svg{width:55%; height:55%; stroke:white; stroke-width:2.5; fill:none;}
+</style>
+</head>
+<body>
+<div class="deck">
+  <div class="stage" id="stage">
+
+    <!-- COVER SLIDE -->
+    <section class="slide active cover-slide" data-n="0">
+      <div class="topbar"></div>
+      <div class="cover-glow"></div>
+      <div class="cover-glow2"></div>
+      <div class="cover-inner">
+        <div class="cover-header">
+          <div class="brand">
+            <div class="logo">N</div>
+            <div class="brand-text"><div class="name" style="color:white;">NiM Express</div><div class="sub" style="color:#8a8478;">Incentive System</div></div>
+          </div>
+          <div class="pagenum" style="color:#8a8478;">01 / 22</div>
+        </div>
+        <div class="cover-eyebrow"><span class="dot" style="background:#f3a785;"></span>ระบบ Incentive ทั้งองค์กร — เริ่มที่สาขา &amp; พขร.</div>
+        <h1 class="cover-h1">วัดผลจริง <span class="accent">จ่ายตามจริง</span><br>ผ่าน <span class="accent2">Dashboard เดียว</span></h1>
+        <div class="cover-sub">ระบบติดตาม Incentive แบบเรียลไทม์ สำหรับ 61 สาขา และ พขร. ทั่วประเทศ — เชื่อม KPI, Grade, และ งบ Incentive เข้าด้วยกันในหน้าจอเดียว</div>
+
+        <div class="mockup-frame">
+          <div class="mockup-titlebar">
+            <div class="mockup-dot" style="background:#e8736b;"></div>
+            <div class="mockup-dot" style="background:#e8c36b;"></div>
+            <div class="mockup-dot" style="background:#7bc99a;"></div>
+            <div class="mockup-titlebar-label">incentive.nimexpress.com — Dashboard ภาพรวม</div>
+            <div style="flex:1;"></div>
+            <div style="font-size:.66vw; color:#6b655a; padding-right:.3vw;">ภาพตัวอย่าง UI — ไม่ใช่ข้อมูลจริง</div>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-toprow">
+              <div class="mockup-filter on">ทุกสาขา</div>
+              <div class="mockup-filter">กลุ่ม S</div>
+              <div class="mockup-filter">กลุ่ม M</div>
+              <div class="mockup-filter">กลุ่ม L</div>
+              <div style="flex:1;"></div>
+              <div class="mockup-filter">มิถุนายน 2569</div>
+            </div>
+            <div class="mockup-kpi-row">
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">งบ Incentive เดือนนี้</div>
+                <div class="mockup-kpi-val t">1,279,704</div>
+                <div class="mockup-kpi-trend up">▲ 4.2% จากเดือนก่อน</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">% ต้นทุนกระจาย (เป้า)</div>
+                <div class="mockup-kpi-val g">20.0%</div>
+                <div class="mockup-kpi-trend up">▲ เป้าจาก 22.98% ปัจจุบัน</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">สาขา Grade A</div>
+                <div class="mockup-kpi-val gr">38 / 65</div>
+                <div class="mockup-kpi-trend up">▲ 58% ของสาขา</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">พขร. ที่ร่วมระบบ</div>
+                <div class="mockup-kpi-val">588 คัน</div>
+                <div class="mockup-kpi-trend">ครบทุกสาขา</div>
+              </div>
+            </div>
+            <div class="mockup-main">
+              <div class="mockup-panel">
+                <div class="mockup-panel-title">การกระจาย Grade ทั้งองค์กร <span class="tag">61 สาขา</span></div>
+                <div class="mockup-bars">
+                  <div class="mockup-bar-col"><div class="mockup-bar" style="height:78%; background:#7bc99a;"></div><div class="mockup-bar-label">A · 38</div></div>
+                  <div class="mockup-bar-col"><div class="mockup-bar" style="height:46%; background:#6f9fd6;"></div><div class="mockup-bar-label">B · 16</div></div>
+                  <div class="mockup-bar-col"><div class="mockup-bar" style="height:22%; background:#e0c270;"></div><div class="mockup-bar-label">C · 7</div></div>
+                  <div class="mockup-bar-col"><div class="mockup-bar" style="height:10%; background:#d9684a;"></div><div class="mockup-bar-label">D · 3</div></div>
+                  <div class="mockup-bar-col"><div class="mockup-bar" style="height:4%; background:#6b655a;"></div><div class="mockup-bar-label">F · 1</div></div>
+                </div>
+              </div>
+              <div class="mockup-panel">
+                <div class="mockup-panel-title">Top สาขา เดือนนี้ <span class="tag">ตัวอย่าง</span></div>
+                <div class="mockup-list">
+                  <div class="mockup-list-row"><div class="mockup-rank gold">1</div><div class="mockup-list-name">DC เชียงใหม่</div><div class="mockup-list-val">฿82,500</div></div>
+                  <div class="mockup-list-row"><div class="mockup-rank">2</div><div class="mockup-list-name">DC ขอนแก่น</div><div class="mockup-list-val">฿71,200</div></div>
+                  <div class="mockup-list-row"><div class="mockup-rank">3</div><div class="mockup-list-name">DC ชลบุรี</div><div class="mockup-list-val">฿68,900</div></div>
+                  <div class="mockup-list-row"><div class="mockup-rank">4</div><div class="mockup-list-name">DC หาดใหญ่</div><div class="mockup-list-val">฿65,300</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="mockup-splitbar">
+              <div style="background:var(--terracotta); flex:6;">งบ Incentive สาขา 60% · ฿767,823</div>
+              <div style="background:var(--gold); flex:4;">งบ Incentive พขร. 40% · ฿511,882</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cover-footer-row">
+          <div class="cover-tag-list">
+            <div class="cover-tag">61 สาขาทั่วประเทศ</div>
+            <div class="cover-tag">NiM Express + Seal Coldchain</div>
+            <div class="cover-tag">Rollout ส.ค. 69</div>
+          </div>
+          <div class="cover-date">2026</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 1 -->
+    <section class="slide" data-n="2">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand">
+          <div class="logo">N</div>
+          <div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div>
+        </div>
+        <div class="pagenum">02 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>ปัญหาที่ต้องแก้</div>
+      <h1>สาขาคุม<span class="accent">ต้นทุน</span>ไม่ได้ — และ<br><span class="accent">คุณภาพ</span>ส่งต่ำ</h1>
+      <div class="subtitle">รากปัญหาเดียวกัน — ไม่มีระบบจูงใจที่ผูกกับผลจริง</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="section-label">ตัวเลขที่บอกปัญหา</div>
+        <div class="stat-grid" style="grid-template-columns:1fr 1fr;">
+          <div class="stat-card">
+            <div class="stat-num">22.98%</div>
+            <div class="stat-label">% ต้นทุนกระจายจริง (พ.ค. 69)</div>
+            <div class="stat-sub">เป้า &lt; 20% — ส่วนต่าง ~3% = หลายล้านบาท/ปี</div>
+          </div>
+          <div class="stat-card gold">
+            <div class="stat-num">95%</div>
+            <div class="stat-label">% จัดส่งสำเร็จเฉลี่ย</div>
+            <div class="stat-sub">เป้า &gt; 97% — บิลตกค้างกระทบลูกค้าตรง</div>
+          </div>
+        </div>
+        <div class="section-label" style="margin-top:.4%;">สาเหตุหลัก 3 ประการ</div>
+        <div class="cause-grid">
+          <div class="cause-card"><div class="cause-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="cause-title">ไม่มีตัววัดที่ชัดเจน</div><div class="cause-sub">สาขาไม่รู้ว่าตัวเองอยู่ตรงไหนเทียบเป้า</div></div>
+          <div class="cause-card"><div class="cause-icon"><svg viewBox="0 0 24 24"><path d="M18.84 12.25l1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71"/><path d="M5.17 11.75l-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71"/><line x1="8" y1="2" x2="8" y2="5"/><line x1="2" y1="8" x2="5" y2="8"/><line x1="16" y1="19" x2="16" y2="22"/><line x1="19" y1="16" x2="22" y2="16"/></svg></div><div class="cause-title">ผลตอบแทนไม่ผูกผลงาน</div><div class="cause-sub">ทำดีหรือแย่ได้เท่ากัน ไม่มีแรงจูงใจ</div></div>
+          <div class="cause-card"><div class="cause-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div><div class="cause-title">ไม่มี Accountability</div><div class="cause-sub">ไม่มีระบบติดตาม ไม่มีรางวัล-โทษชัดเจน</div></div>
+        </div>
+        <div class="callout"><svg class="callout-icon" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a6 6 0 0 0-4 10.5c.7.6 1 1.3 1 2.5h6c0-1.2.3-1.9 1-2.5A6 6 0 0 0 12 2z"/></svg> ระบบ Incentive วัดผลจริง — แยก งบ Incentive สาขา/พขร. ให้รางวัลตามผลงานจริง</div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 2 -->
+    <section class="slide" data-n="3">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">03 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>ภาพรวมระบบ</div>
+      <h1>Incentive <span class="accent">2 ส่วน</span> แยกกันชัดเจน</h1>
+      <div class="subtitle">วัดสาขาทั้งทีม + วัด พขร. รายคัน — งบ Incentive แยกกัน ไม่ปนกัน</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="section-label">2 กลุ่มที่วัด</div>
+        <div class="two-col" style="flex:0 0 50%; min-height:0;">
+          <div class="colcard branch">
+            <div class="head"><div class="tag">BRANCH LEVEL</div><div class="ctitle">สาขา (ทีมรวม)</div><div class="csub">วัดผลทั้งสาขาร่วมกัน ทุกคนมีส่วนร่วม</div></div>
+            <div class="body">
+              <div class="li-item"><div class="t">% ต้นทุนกระจาย</div><div class="d">ค่าจ้างรถ ÷ รายได้ขนส่ง — เป้า &lt; 20%</div></div>
+              <div class="li-item"><div class="t">% จัดส่งสำเร็จ</div><div class="d">บิลสำเร็จ ÷ บิลทั้งหมด — เป้า &gt; 97%</div></div>
+              <div class="li-item"><div class="t">% SLA / คุณภาพบริการ</div><div class="d">ส่งตรงเวลาตามที่สัญญา</div></div>
+              <div class="li-item"><div class="t">% ความเสียหาย / สูญหาย</div><div class="d">ควบคุมความเสียหายในสาขา</div></div>
+            </div>
+          </div>
+          <div class="colcard driver">
+            <div class="head"><div class="tag">DRIVER LEVEL</div><div class="ctitle">พขร. (รายคัน)</div><div class="csub">วัดแยกแต่ละคัน ได้-เสียตามผลงานตัวเอง</div></div>
+            <div class="body">
+              <div class="li-item"><div class="t">% จัดส่งสำเร็จ</div><div class="d">บิลสำเร็จของรถคันนั้น — เป้า &gt; 97%</div></div>
+              <div class="li-item"><div class="t">% ต้นทุน / เที่ยว</div><div class="d">ค่าจ้างต่อเที่ยว ÷ รายได้บิลที่ส่ง — เป้า &lt; 20%</div></div>
+              <div class="li-item"><div class="t">จำนวนบิลที่ขึ้น</div><div class="d">ยิ่งขึ้นมาก ต้นทุน % ยิ่งต่ำ</div></div>
+              <div class="li-item"><div class="t">ยอดรับพัสดุ</div><div class="d">Pickup ที่เก็บได้ระหว่างเส้นทาง</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="section-label" style="margin-top:.5%;">วงจรการทำงาน</div>
+        <div class="flow-row">
+          <div class="flow-step"><div class="flow-icon"><svg viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg></div><div class="flow-label">วัดผล</div><div class="flow-sub">รายเดือน</div></div>
+          <div class="flow-arrow"><svg viewBox="0 0 24 24" style="width:1.2vw;height:1.2vw;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+          <div class="flow-step"><div class="flow-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div><div class="flow-label">ให้ Score</div><div class="flow-sub">A ถึง F</div></div>
+          <div class="flow-arrow"><svg viewBox="0 0 24 24" style="width:1.2vw;height:1.2vw;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+          <div class="flow-step"><div class="flow-icon"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg></div><div class="flow-label">คำนวณงบ Incentive</div><div class="flow-sub">จากผลจริง</div></div>
+          <div class="flow-arrow"><svg viewBox="0 0 24 24" style="width:1.2vw;height:1.2vw;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+          <div class="flow-step"><div class="flow-icon"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg></div><div class="flow-label">จ่าย Incentive</div><div class="flow-sub">ตาม Score</div></div>
+        </div>
+        <div class="scope-bar"><svg class="callout-icon" style="stroke:var(--terracotta-dark);" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg> ครอบคลุม 61 สาขา ทั่วประเทศ — ทั้ง NiM Express (AB) และ Seal Coldchain (CC)</div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 3 (NEW) — Branch size factor -->
+    <section class="slide" data-n="4">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">04 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>ประเด็นเพิ่มเติม — เพื่อพิจารณา</div>
+      <h1>สาขา<span class="accent">ขนาดต่างกัน</span> — เป้าเดียวกันแฟร์จริงไหม</h1>
+      <div class="subtitle">61 สาขา ไม่เท่ากันทั้งคน รถ ยอดขาย และปริมาณบิล</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="section-label">ตัวแปรที่ทำให้สาขาต่างกัน</div>
+        <div class="factor-row">
+          <div class="factor-chip"><div class="ic"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="label">จำนวนคน</div></div>
+          <div class="factor-chip"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 17h13V6H3v11z"/><path d="M16 9h4l3 4v4h-7V9z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg></div><div class="label">จำนวนรถ</div></div>
+          <div class="factor-chip"><div class="ic"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div><div class="label">ยอดขาย</div></div>
+          <div class="factor-chip"><div class="ic"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><div class="label">บิลเข้า-บิลออก</div></div>
+        </div>
+        <div class="callout" style="background:var(--dark-card);"><svg class="callout-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ถ้าใช้ Threshold เดียวกันทุกสาขา — สาขาเล็กอาจ "ดูแย่" ทั้งที่ทำงานเต็มที่แล้ว เพราะข้อจำกัดด้านขนาด ไม่ใช่ฝีมือ</div>
+        <div class="section-label" style="margin-top:.5%;">ทางเลือกที่เป็นไปได้ (เพื่อหารือ)</div>
+        <div class="option-card">
+          <div class="otitle">1 · จัดกลุ่มขนาดสาขา (S / M / L / XL)</div>
+          <div class="odesc">ตั้ง Threshold แยกตามกลุ่มขนาด — ง่ายต่อการสื่อสาร เริ่มได้เร็ว (ข้อมูลจริงพบ CDC บางนาใหญ่กว่ากลุ่ม L มาก ต้องแยกเป็น XL)</div>
+        </div>
+        <div class="option-card">
+          <div class="otitle">2 · เทียบกับ Baseline ของสาขาตัวเอง</div>
+          <div class="odesc">วัดการ "พัฒนาขึ้น" จากผลงานเดือนก่อนของสาขานั้น แทน absolute threshold</div>
+        </div>
+        <div class="option-card">
+          <div class="otitle">3 · Weighted-by-size ในการคิดงบ Incentive</div>
+          <div class="odesc">ขนาดสาขามีผลต่อสัดส่วน งบ Incentive ที่ได้รับ ไม่ใช่ต่อ threshold โดยตรง</div>
+        </div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 4b (NEW) — Mae Hong Son evidence + Baseline solution -->
+    <section class="slide" data-n="5">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">05 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>หลักฐานจริง — ทำไม Threshold เดียวไม่แฟร์</div>
+      <h1>สาขาใหญ่ได้เปรียบ <span class="accent">โดยธรรมชาติ</span> — ไม่ใช่เพราะเก่งกว่า</h1>
+      <div class="subtitle">ข้อมูลจริง พ.ค. 69 — ปัญหาเกิดได้จากหลายสาเหตุ ไม่ใช่แค่ "ของน้อย"</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="section-label">เทียบ 4 ทาง — เชียงใหม่ / ค่าเฉลี่ยระบบ / นครสวรรค์ / แม่ฮ่องสอน</div>
+        <div class="size-grid" style="flex:0 0 40%; grid-template-columns:repeat(4,1fr);">
+          <div class="size-card" style="border-top:4px solid var(--green); padding:1% 0.8%;">
+            <div class="size-tag" style="font-size:0.85vw;">เชียงใหม่ — สบายมาก</div>
+            <div class="size-name" style="color:var(--green); font-size:1.6vw;">16.9%</div>
+            <div class="size-desc" style="font-size:0.72vw;">50 กล่อง/เที่ยว · 167 กม. · 22 คัน</div>
+          </div>
+          <div class="size-card m" style="padding:1% 0.8%;">
+            <div class="size-tag" style="font-size:0.85vw;">ค่าเฉลี่ยระบบ</div>
+            <div class="size-name" style="font-size:1.6vw;">23.6%</div>
+            <div class="size-desc" style="font-size:0.72vw;">44 กล่อง/เที่ยว · 243 กม. · 10 คัน</div>
+          </div>
+          <div class="size-card l" style="border-top:4px solid var(--blue); padding:1% 0.8%;">
+            <div class="size-tag" style="font-size:0.85vw;">นครสวรรค์ — รถน้อย ไกล</div>
+            <div class="size-name" style="color:var(--blue); font-size:1.6vw;">27.1%</div>
+            <div class="size-desc" style="font-size:0.72vw;">48 กล่อง/เที่ยว · 296 กม. · 7 คัน</div>
+          </div>
+          <div class="size-card l" style="border-top:4px solid var(--terracotta-dark); padding:1% 0.8%;">
+            <div class="size-tag" style="font-size:0.85vw;">แม่ฮ่องสอน — ติด F ตลอด</div>
+            <div class="size-name" style="color:var(--terracotta-dark); font-size:1.6vw;">62.3%</div>
+            <div class="size-desc" style="font-size:0.72vw;">21 กล่อง/เที่ยว · 328 กม. · 2 คัน</div>
+          </div>
+        </div>
+        <div class="callout" style="background:var(--dark-card);"><svg class="callout-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> 2 สาเหตุต่างกัน — แม่ฮ่องสอนของน้อยจัด (21 กล่อง) ส่วนนครสวรรค์ของไม่ได้น้อยมาก (48 กล่อง ใกล้เฉลี่ย) แต่รถน้อย+ระยะไกลทำให้ % ต้นทุนพุ่งเหมือนกัน — Threshold เดียวจับไม่ได้ทั้ง 2 แบบ</div>
+        <div class="section-label" style="margin-top:.3%;">ข้อเสนอ: ใช้ Baseline ของตัวเอง + Floor ขั้นต่ำ (ตัวอย่าง Baseline เดือนก่อนแม่ฮ่องสอน = 65%)</div>
+        <div class="two-col" style="flex:1; min-height:0; grid-template-columns:1fr;">
+          <div style="display:flex; flex-direction:column; gap:3%; height:100%; justify-content:space-evenly;">
+            <div class="kpi-table-row" style="display:grid; grid-template-columns:1fr 1.6fr 1fr; align-items:center; gap:1%;">
+              <div class="name">Grade A</div>
+              <div class="formula">ลดลง ≥5 จุดจาก Baseline (65% → ≤60%)</div>
+              <div class="kpi-tag" style="background:var(--green-bg); color:var(--green);">รับเต็ม 100%</div>
+            </div>
+            <div class="kpi-table-row" style="display:grid; grid-template-columns:1fr 1.6fr 1fr; align-items:center; gap:1%;">
+              <div class="name">Grade B</div>
+              <div class="formula">ลดลง 2-5 จุด (65% → 60-63%) — พ.ค. 69 จริง 62.3% เข้าเกณฑ์นี้</div>
+              <div class="kpi-tag" style="background:var(--blue-bg); color:var(--blue);">รับ 70%</div>
+            </div>
+            <div class="kpi-table-row" style="display:grid; grid-template-columns:1fr 1.6fr 1fr; align-items:center; gap:1%;">
+              <div class="name">Grade C / D / F</div>
+              <div class="formula">ทรงตัว / แย่ลง — ตามระดับ</div>
+              <div class="kpi-tag" style="background:var(--yellow-bg); color:#C99A30;">ไม่ได้ / ตามเกณฑ์</div>
+            </div>
+          </div>
+        </div>
+        <div class="callout"><svg class="callout-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> มี Floor ขั้นต่ำกันด้วย — ถ้า % ต้นทุนเกิน 50% ไม่ว่าจะดีขึ้นแค่ไหน Grade ตัดไม่เกิน C เพื่อกัน "พัฒนาการ" บังหน้าปัญหาที่ยังร้ายแรงจริง</div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 5b (NEW) — Where Baseline fits in the money flow -->
+    <section class="slide" data-n="6">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">06 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>คำอธิบาย — เตรียมตอบคำถาม</div>
+      <h1>Baseline เปลี่ยน<span class="accent">"ใครได้ Grade อะไร"</span> ไม่เปลี่ยนก้อนเงินรวม</h1>
+      <div class="subtitle">เงินทั้งระบบยังคำนวณเหมือนเดิม 3 ชั้น — Baseline แทรกอยู่แค่ชั้นล่างสุด</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="section-label">เงินไหลผ่าน 3 ชั้น — Baseline กระทบแค่ชั้นที่ 3</div>
+        <div class="path-box" style="flex-shrink:0;">
+          <div class="path-step s1"><div class="path-tag">ชั้น 1 · ระดับบริษัท</div><div class="path-title">งบ Incentive รวม 1,279,704</div><div class="path-sub">ไม่เปลี่ยน — คำนวณจากผลประหยัดทั้งบริษัท</div></div>
+          <div style="color:#bdb6a8; font-size:1.534vw;">→</div>
+          <div class="path-step"><div class="path-tag">ชั้น 2 · ระดับกลุ่มขนาด</div><div class="path-title">แบ่ง S/M/L/XL (60:40 สาขา:พขร.)</div><div class="path-sub">ไม่เปลี่ยน — สัดส่วนกลุ่มเท่าเดิม</div></div>
+          <div style="color:#bdb6a8; font-size:1.534vw;">→</div>
+          <div class="path-step" style="background:var(--terracotta); border-color:var(--terracotta-dark);"><div class="path-tag" style="color:white;">ชั้น 3 · ระดับสาขาเดี่ยว</div><div class="path-title" style="color:white;">ใครได้ Grade อะไรในกลุ่ม</div><div class="path-sub" style="color:#fde; opacity:.85;">เปลี่ยน — Baseline แทนที่ Threshold ตายตัว</div></div>
+        </div>
+        <div class="section-label" style="margin-top:.4%;">ตัวอย่าง: งบคงที่กลุ่ม S (170,800 บาท/เดือน) ก้อนเดียวกัน — แค่แบ่งในกลุ่มต่างกัน</div>
+        <div class="two-col" style="flex:0 0 50%; min-height:0;">
+          <div class="colcard branch">
+            <div class="head"><div class="tag">ใช้ THRESHOLD เดิม</div><div class="ctitle">แม่ฮ่องสอน Grade F</div><div class="csub">62.3% เกิน 20% — ไม่ได้เลย</div></div>
+            <div class="body">
+              <div class="li-item"><div class="t">แม่ฮ่องสอนได้</div><div class="d">0 บาท</div></div>
+              <div class="li-item"><div class="t">งบ 170,800 ของกลุ่ม S</div><div class="d">แบ่งให้ 27 สาขาที่เหลือเท่านั้น</div></div>
+            </div>
+          </div>
+          <div class="colcard driver">
+            <div class="head"><div class="tag">ใช้ BASELINE</div><div class="ctitle">แม่ฮ่องสอน Grade B</div><div class="csub">ดีขึ้น 2.7 จุดจาก Baseline 65%</div></div>
+            <div class="body">
+              <div class="li-item"><div class="t">แม่ฮ่องสอนได้</div><div class="d">4,270 บาท (70% ของ 6,100)</div></div>
+              <div class="li-item"><div class="t">งบ 170,800 ของกลุ่ม S</div><div class="d">ก้อนเดียวกัน — แค่แบ่งให้ 28 สาขารวมแม่ฮ่องสอนด้วย</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="callout"><svg class="callout-icon" viewBox="0 0 24 24"><path d="M12 2a6 6 0 0 0-4 10.5c.7.6 1 1.3 1 2.5h6c0-1.2.3-1.9 1-2.5A6 6 0 0 0 12 2z"/><path d="M9 18h6"/><path d="M10 22h4"/></svg> สรุปให้ตอบในห้องประชุม: งบรวมบริษัทและสัดส่วนกลุ่มไม่ต้องคำนวณใหม่ — Baseline แค่เปลี่ยนว่าใครมีสิทธิ์รับส่วนแบ่งจากก้อนเดิมที่ตั้งไว้แล้ว</div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 4 (orig 3) — 3 Models -->
+    <section class="slide" data-n="7">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">07 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>วิธีคิด Incentive — 3 Model</div>
+      <h1>เลือก<span class="accent">วิธีคิด</span>ให้เหมาะกับความพร้อม</h1>
+      <div class="subtitle">แต่ละ Model ให้ผลต่างกัน — มีเส้นทางที่แนะนำ</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="model-row" style="flex:0 0 30%;">
+          <div class="model-card">
+            <div class="model-tagrow"><div class="model-num">MODEL 01</div><div class="model-badge">เริ่มได้เลย</div></div>
+            <div class="model-title">งบคงที่ตาม Grade</div>
+            <div class="model-formula">งบ Fix/เดือน → แจกตาม Score: A=100% · B=70% · C=0% · D,F=หัก</div>
+            <div class="model-points">ไม่ต้องรอ Baseline · คุมงบได้แน่นอน · งบไม่ผูกผลประหยัดจริง</div>
+          </div>
+          <div class="model-card m2">
+            <div class="model-tagrow"><div class="model-num">MODEL 02</div><div class="model-badge">ระยะยาว</div></div>
+            <div class="model-title">Gain Sharing</div>
+            <div class="model-formula">ส่วนต่าง cost (จริง vs Target) × รายได้รวม × 50% = งบ Incentive</div>
+            <div class="model-points">Win-Win ชัด · ยุติธรรม ไม่มีความเสี่ยงจ่ายเกิน · ต้องมี Baseline แม่นยำก่อน</div>
+          </div>
+          <div class="model-card m3">
+            <div class="model-tagrow"><div class="model-num">MODEL 03</div><div class="model-badge">ระยะยาวมาก</div></div>
+            <div class="model-title">Pay per Performance</div>
+            <div class="model-formula">ส่งสำเร็จ &gt;97% → X บาท/บิล · ต้นทุน &lt;20% → Y บาท/เที่ยว</div>
+            <div class="model-points">เชื่อมพฤติกรรมกับเงินโดยตรงที่สุด · ซับซ้อน ต้องออกแบบ Rate รอบคอบมาก</div>
+          </div>
+        </div>
+        <div class="section-label" style="margin-top:.6%;">เทียบ 3 Model อย่างย่อ</div>
+        <div class="factor-row" style="flex-shrink:0;">
+          <div class="factor-chip"><div class="ic"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div class="label">ความเร็วเริ่มงาน: Model 1 เร็วสุด</div></div>
+          <div class="factor-chip"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div><div class="label">ความยุติธรรม: Model 2 สูงสุด</div></div>
+          <div class="factor-chip"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div><div class="label">แรงจูงใจตรงจุด: Model 3 สูงสุด</div></div>
+        </div>
+        <div class="section-label" style="margin-top:.3%;">คำแนะนำ — เส้นทาง 2 Phase</div>
+        <div class="path-box" style="flex-shrink:0;">
+          <div class="path-step s1"><div class="path-tag">PHASE 1</div><div class="path-title">เริ่มด้วย Model 1</div><div class="path-sub">ใช้งบคงที่ระหว่างเก็บ Baseline 3 เดือน</div></div>
+          <div style="color:#bdb6a8; font-size:1.534vw;">→</div>
+          <div class="path-step"><div class="path-tag">PHASE 2</div><div class="path-title">Migrate Model 2</div><div class="path-sub">Gain Sharing เมื่อข้อมูลพร้อม — ยั่งยืนกว่า</div></div>
+        </div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 5b (NEW) — Model 1 vs 2 side-by-side comparison -->
+    <section class="slide" data-n="8">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">08 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>เทียบให้เห็นชัด — Model 1 vs Model 2</div>
+      <h1>เงินก้อนเดียวกัน — <span class="accent">คิดต่างกันยังไง</span></h1>
+      <div class="subtitle">ตัวอย่างสาขากลุ่ม S เดือนเดียวกัน — ดูว่าเงินที่ได้เปลี่ยนไปอย่างไรตามผลงาน</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="two-col" style="flex:0 0 26%; min-height:0;">
+          <div class="colcard branch">
+            <div class="head"><div class="tag">MODEL 1</div><div class="ctitle">งบคงที่ตาม Grade</div><div class="csub">ตั้งราคาตายตัวล่วงหน้า ไม่ขึ้นกับผลประหยัดจริง</div></div>
+            <div class="body">
+              <div class="li-item"><div class="t">วิธีคิด</div><div class="d">Grade A = ได้เต็ม 6,100 บาท ไม่ว่าจะประหยัดได้มากหรือน้อย</div></div>
+              <div class="li-item"><div class="t">ข้อดี</div><div class="d">รู้ตัวเลขล่วงหน้า เริ่มใช้ได้ทันที ไม่ต้องรอ Baseline</div></div>
+            </div>
+          </div>
+          <div class="colcard driver">
+            <div class="head"><div class="tag">MODEL 2</div><div class="ctitle">Gain Sharing</div><div class="csub">แบ่งตามผลประหยัดจริงของเดือนนั้น</div></div>
+            <div class="body">
+              <div class="li-item"><div class="t">วิธีคิด</div><div class="d">ประหยัดได้เท่าไร เอามาแบ่งครึ่ง — ทุกสาขาได้ % รายได้เท่ากัน (0.89%)</div></div>
+              <div class="li-item"><div class="t">ข้อดี</div><div class="d">ทำดีได้มาก ทำแค่ผ่านได้น้อย จูงใจให้ทำเกินเป้าจริง</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="section-label" style="margin-top:.3%;">เดือนเดียวกัน 3 สถานการณ์ — สาขากลุ่ม S (รายได้เฉลี่ย 715,761 บาท)</div>
+        <div class="two-col" style="flex:0 0 40%; min-height:0; grid-template-columns:1fr;">
+          <div style="display:flex; flex-direction:column; gap:3%; height:100%; justify-content:space-evenly;">
+            <div class="kpi-table-row" style="display:grid; grid-template-columns:1.4fr 1fr 1fr; align-items:center; gap:1%;">
+              <div class="name">ทำได้เฉียดเป้า (ต้นทุน 21.5%)</div>
+              <div class="kpi-tag" style="background:var(--green-bg); color:var(--green); justify-self:start;">Model 1: 6,100 บาท</div>
+              <div class="kpi-tag" style="background:var(--yellow-bg); color:#C99A30; justify-self:start;">Model 2: 3,178 บาท</div>
+            </div>
+            <div class="kpi-table-row" style="display:grid; grid-template-columns:1.4fr 1fr 1fr; align-items:center; gap:1%;">
+              <div class="name">ทำได้ตามค่าเฉลี่ยจริง (ต้นทุน 22.98%)</div>
+              <div class="kpi-tag" style="background:var(--green-bg); color:var(--green); justify-self:start;">Model 1: 6,100 บาท</div>
+              <div class="kpi-tag" style="background:var(--yellow-bg); color:#C99A30; justify-self:start;">Model 2: 6,399 บาท</div>
+            </div>
+            <div class="kpi-table-row" style="display:grid; grid-template-columns:1.4fr 1fr 1fr; align-items:center; gap:1%;">
+              <div class="name">ทำได้ดีเยี่ยม (ต้นทุนลดถึง 17%)</div>
+              <div class="kpi-tag" style="background:var(--green-bg); color:var(--green); justify-self:start;">Model 1: 6,100 บาท</div>
+              <div class="kpi-tag" style="background:var(--yellow-bg); color:#C99A30; justify-self:start;">Model 2: 12,841 บาท</div>
+            </div>
+          </div>
+        </div>
+        <div class="callout"><svg class="callout-icon" viewBox="0 0 24 24"><path d="M12 2a6 6 0 0 0-4 10.5c.7.6 1 1.3 1 2.5h6c0-1.2.3-1.9 1-2.5A6 6 0 0 0 12 2z"/><path d="M9 18h6"/><path d="M10 22h4"/></svg> สรุปให้ดูง่ายๆ: Model 1 เส้นตรงเสมอที่ 6,100 บาท — Model 2 ขึ้นลงตามผลงานจริง ตั้งแต่ 3,178 ถึง 12,841 บาท ในเดือนเดียวกัน</div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 5 (orig 4) — Score & KPI -->
+    <section class="slide" data-n="9">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">09 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>เกณฑ์วัดผล &amp; KPI</div>
+      <h1>Score <span class="accent">A–F</span> ตัดสินผลตอบแทนทุกเดือน</h1>
+      <div class="subtitle">KPI 2 กลุ่มวัดแยก — Score รวมเป็น Grade — Grade กำหนด % ที่ได้</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="section-label">เกณฑ์ Score</div>
+        <div class="grade-grid">
+          <div class="grade-card a"><div class="grade-letter">A</div><div class="grade-pt">4 คะแนน</div><div class="grade-result">รับ 100%</div><div class="grade-sub">ของ งบ Incentive ส่วนตัว</div><div class="grade-bar"><div class="grade-bar-fill" style="width:100%; background:var(--green);"></div></div></div>
+          <div class="grade-card b"><div class="grade-letter">B</div><div class="grade-pt">3 คะแนน</div><div class="grade-result">รับ 70%</div><div class="grade-sub">ของ งบ Incentive ส่วนตัว</div><div class="grade-bar"><div class="grade-bar-fill" style="width:70%; background:var(--blue);"></div></div></div>
+          <div class="grade-card c"><div class="grade-letter">C</div><div class="grade-pt">2 คะแนน</div><div class="grade-result">ไม่ได้/ไม่เสีย</div><div class="grade-sub">เกณฑ์ขั้นต่ำ</div><div class="grade-bar"><div class="grade-bar-fill" style="width:0%; background:#C99A30;"></div></div></div>
+          <div class="grade-card d"><div class="grade-letter">D</div><div class="grade-pt">1 คะแนน</div><div class="grade-result">Warning</div><div class="grade-sub">+ Action Plan</div><div class="grade-bar"><div class="grade-bar-fill" style="width:0%; background:var(--red);"></div></div></div>
+          <div class="grade-card f"><div class="grade-letter">F</div><div class="grade-pt">0 คะแนน</div><div class="grade-result">บทลงโทษ</div><div class="grade-sub">ตามระดับ</div><div class="grade-bar"><div class="grade-bar-fill" style="width:0%; background:var(--grey);"></div></div></div>
+        </div>
+        <div class="section-label" style="margin-top:.2%;">KPI ที่ใช้วัด</div>
+        <div class="two-col" style="flex:1; min-height:0;">
+          <div style="display:flex; flex-direction:column; gap:3%;">
+            <div class="kpi-table-row"><div class="name">% ต้นทุนกระจาย</div><div class="formula">ค่าจ้างรถ ÷ รายได้ขนส่ง × 100</div><div class="kpi-tag">เป้า &lt; 20%</div></div>
+            <div class="kpi-table-row"><div class="name">% จัดส่งสำเร็จ</div><div class="formula">บิลสำเร็จ ÷ บิลทั้งหมด × 100</div><div class="kpi-tag">เป้า &gt; 97%</div></div>
+            <div class="kpi-table-row"><div class="name">% SLA</div><div class="formula">ส่งตรงเวลา ÷ ทั้งหมด × 100</div><div class="kpi-tag">เป้า &gt; 95%</div></div>
+            <div class="kpi-table-row"><div class="name">% เสียหาย / สูญหาย</div><div class="formula">มูลค่าเสียหาย ÷ รายได้รวม × 100</div><div class="kpi-tag" style="background:var(--red-bg); color:var(--red);">เป้า &lt; 0.5%</div></div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:3%;">
+            <div class="kpi-table-row"><div class="name">% จัดส่งสำเร็จ</div><div class="formula">บิลสำเร็จรถนี้ ÷ บิลขึ้น × 100</div><div class="kpi-tag">เป้า &gt; 97%</div></div>
+            <div class="kpi-table-row"><div class="name">% ต้นทุน / เที่ยว</div><div class="formula">ค่าจ้าง ÷ รายได้บิลที่ส่ง × 100</div><div class="kpi-tag">เป้า &lt; 20%</div></div>
+            <div class="kpi-table-row"><div class="name">จำนวนบิลที่ขึ้น</div><div class="formula">นับบิลรายเที่ยว</div><div class="kpi-tag flex">ยิ่งมากยิ่งดี</div></div>
+            <div class="kpi-table-row"><div class="name">ยอดรับพัสดุ (Pickup)</div><div class="formula">มูลค่า pickup ระหว่างเส้นทาง</div><div class="kpi-tag flex">ยิ่งมากยิ่งดี</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 6 (orig 5) — Numbers -->
+    <section class="slide" data-n="10">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">10 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>ตัวเลข &amp; ผลตอบแทน</div>
+      <h1>ลด Cost 2.98% บริษัทได้ <span class="accent">~15.4 ล้าน/ปี (ประมาณการ)</span></h1>
+      <div class="subtitle">ข้อมูลจริงเดือน พ.ค. 69 — อิงจาก Gain Sharing Model เพื่อแสดงวิธีคิด (ฐานยอดขายสาขา รอ confirm วิธีคิดกับทีม)</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="section-label">คำนวณงบ Incentive — Gain Sharing (ยอดขายฐาน 85,862,642 บาท/เดือน — พ.ค. 69)</div>
+        <div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="stat-card" style="border-bottom-color:var(--line);"><div class="stat-num" style="font-size:2.36vw; color:var(--ink);">22.98%</div><div class="stat-label">% ต้นทุนกระจายจริง</div><div class="stat-sub">คำนวณจากไฟล์ต้นทุนรถ (ฐาน 84.95M)</div></div>
+          <div class="stat-card" style="border-bottom-color:var(--line);"><div class="stat-num" style="font-size:2.36vw; color:var(--ink);">20%</div><div class="stat-label">% ต้นทุนเป้าหมาย</div><div class="stat-sub">= 17,172,528 บาท/เดือน</div></div>
+          <div class="stat-card"><div class="stat-num" style="font-size:2.36vw;">2,559,409</div><div class="stat-label">ประหยัดได้/เดือน</div><div class="stat-sub">บาท</div></div>
+        </div>
+        <div class="two-col" style="flex:0 0 22%; align-items:start;">
+          <div class="stat-card" style="border-bottom-color:var(--grey);"><div class="stat-num" style="font-size:2.124vw; color:var(--ink);">1,279,704</div><div class="stat-label">บริษัทเก็บ (50%)</div><div class="stat-sub">ลด cost สุทธิขององค์กร</div></div>
+          <div class="stat-card gold"><div class="stat-num" style="font-size:2.124vw;">1,279,704</div><div class="stat-label">งบ Incentive (50%)</div><div class="stat-sub">แจกตาม Score — สาขา + พขร.</div></div>
+        </div>
+        <div class="section-label" style="margin-top:.3%;">ROI ระดับองค์กร / ปี &nbsp;·&nbsp; การแบ่งงบ Incentive ภายใน</div>
+        <div class="two-col" style="flex:0 0 30%; align-items:start;">
+          <div style="display:flex; gap:.7%; height:100%;">
+            <div class="stat-card" style="flex:1; border-bottom-color:var(--grey); display:flex; flex-direction:column; justify-content:center;"><div class="stat-num" style="font-size:1.77vw; color:var(--ink);">~1,030 ล้าน</div><div class="stat-sub">ประมาณการรายปี (annualized จาก พ.ค. เดือนเดียว ×12)</div></div>
+            <div class="stat-card" style="flex:1; border-bottom-color:var(--grey); display:flex; flex-direction:column; justify-content:center;"><div class="stat-num" style="font-size:1.77vw; color:var(--ink);">~15.4 ล้าน</div><div class="stat-sub">ประมาณการรายปี (annualized จาก พ.ค. เดือนเดียว ×12)</div></div>
+          </div>
+          <div class="stat-card" style="display:flex; flex-direction:column; justify-content:center; height:100%;">
+            <div style="font-weight:700; font-size:1.121vw; margin-bottom:.5vw;">งบ Incentive 1,279,704 บาท/เดือน</div>
+            <div style="display:flex; border-radius:8px; overflow:hidden; height:1.8vw;">
+              <div style="background:var(--terracotta); flex:6; display:flex; align-items:center; justify-content:center; color:white; font-size:0.92vw; font-weight:700;">สาขา 60%</div>
+              <div style="background:var(--gold); flex:4; display:flex; align-items:center; justify-content:center; color:white; font-size:0.92vw; font-weight:700;">พขร. 40%</div>
+            </div>
+            <div style="font-size:0.85vw; color:var(--grey); margin-top:.4vw;">งบ Incentive สาขา 767,823 บาท · งบ Incentive พขร. 511,882 บาท</div>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 7 (NEW) — Model 1 by branch size -->
+    <section class="slide" data-n="11">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">11 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>ตัวอย่างจำลอง — Model 1</div>
+      <h1>งบคงที่ตาม Grade — แบ่งตามขนาดสาขา <span class="accent">S / M / L / XL</span></h1>
+      <div class="subtitle">ยอดขายจริง พ.ค. 69 · 61 สาขา (28S/27M/5L/1XL) · ตัวอย่างที่ Grade A (รับเต็ม 100%)</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="size-grid" style="flex:0 0 32%;">
+          <div class="size-card">
+            <div class="size-tag">กลุ่ม S · 28 สาขา</div>
+            <div class="size-name">6,100 บาท</div>
+            <div class="size-desc">งบคงที่/สาขา/เดือน (Grade A)</div>
+          </div>
+          <div class="size-card m">
+            <div class="size-tag">กลุ่ม M · 27 สาขา</div>
+            <div class="size-name">11,400 บาท</div>
+            <div class="size-desc">งบคงที่/สาขา/เดือน (Grade A)</div>
+          </div>
+          <div class="size-card l">
+            <div class="size-tag">กลุ่ม L · 5 สาขา</div>
+            <div class="size-name">30,300 บาท</div>
+            <div class="size-desc">งบคงที่/สาขา/เดือน (Grade A)</div>
+          </div>
+        </div>
+        <div class="section-label" style="margin-top:.2%;">รวมงบ Incentive ทั้งกลุ่ม (ทุกสาขาได้ Grade A) — XL คือ CDC บางนา</div>
+        <div class="two-col" style="flex:0 0 44%; min-height:0;">
+          <div style="display:flex; flex-direction:column; gap:3%;">
+            <div class="kpi-table-row"><div class="name">กลุ่ม S — รวม 28 สาขา</div><div class="formula">6,100 × 28 สาขา</div><div class="kpi-tag" style="background:var(--green-bg); color:var(--green);">170,800 บาท/เดือน</div></div>
+            <div class="kpi-table-row"><div class="name">กลุ่ม M — รวม 27 สาขา</div><div class="formula">11,400 × 27 สาขา</div><div class="kpi-tag" style="background:var(--blue-bg); color:var(--blue);">307,800 บาท/เดือน</div></div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:3%;">
+            <div class="kpi-table-row"><div class="name">กลุ่ม L — รวม 5 สาขา</div><div class="formula">30,300 × 5 สาขา</div><div class="kpi-tag" style="background:var(--yellow-bg); color:#C99A30;">151,500 บาท/เดือน</div></div>
+            <div class="kpi-table-row"><div class="name">XL — CDC บางนา (1)</div><div class="formula">139,200 × 1</div><div class="kpi-tag" style="background:var(--terracotta); color:white;">139,200 บาท/เดือน</div></div>
+          </div>
+        </div>
+        <div class="kpi-table-row" style="background:var(--dark-card); margin-top:1%;"><div class="name" style="color:white;">รวมทั้งหมด 61 สาขา</div><div class="formula" style="color:#bdb6a8;">170,800 + 307,800 + 151,500 + 139,200</div><div class="kpi-tag" style="background:var(--terracotta); color:white;">769,300 บาท/เดือน</div></div>
+        <div class="callout"><svg class="callout-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> ข้อสังเกต: งบ Incentive ต่อสาขาคงที่ไม่ว่ารายได้จริงจะเป็นเท่าไร — เริ่มใช้ได้เลยแต่ไม่ผูกกับผลประหยัดจริงของแต่ละกลุ่ม</div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 8 (NEW) — Model 2 by branch size -->
+    <section class="slide" data-n="12">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">12 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>ตัวอย่างจำลอง — Model 2</div>
+      <h1>Gain Sharing — แบ่งตามขนาดสาขา <span class="accent">S / M / L / XL</span></h1>
+      <div class="subtitle">ยอดขายจริง พ.ค. 69 · ต้นทุนจริง 22.98% vs เป้า 20% · แบ่งงบ Incentive 50%</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="size-grid" style="flex:0 0 30%;">
+          <div class="size-card">
+            <div class="size-tag">กลุ่ม S · 28 สาขา</div>
+            <div class="size-name">20.0 ล้าน</div>
+            <div class="size-desc">รายได้กลุ่ม/เดือน (เฉลี่ย 0.72 ล้าน/สาขา)</div>
+          </div>
+          <div class="size-card m">
+            <div class="size-tag">กลุ่ม M · 27 สาขา</div>
+            <div class="size-name">29.7 ล้าน</div>
+            <div class="size-desc">รายได้กลุ่ม/เดือน (เฉลี่ย 1.10 ล้าน/สาขา)</div>
+          </div>
+          <div class="size-card l">
+            <div class="size-tag">กลุ่ม L · 5 สาขา</div>
+            <div class="size-name">18.8 ล้าน</div>
+            <div class="size-desc">รายได้กลุ่ม/เดือน (เฉลี่ย 3.76 ล้าน/สาขา)</div>
+          </div>
+        </div>
+        <div class="section-label" style="margin-top:.2%;">งบ Incentive ที่ได้รับ (ประหยัด 2.98% × 50%) — รวมกลุ่ม และเฉลี่ย/สาขา · XL = CDC บางนา 17.3 ล้าน</div>
+        <div class="two-col" style="flex:0 0 46%; min-height:0;">
+          <div style="display:flex; flex-direction:column; gap:3%;">
+            <div class="kpi-table-row"><div class="name">กลุ่ม S — รวม 28 สาขา</div><div class="formula">ประหยัด 597,395 × 50% · เฉลี่ย 6,401 บาท/สาขา</div><div class="kpi-tag" style="background:var(--green-bg); color:var(--green);">179,218 บาท/เดือน</div></div>
+            <div class="kpi-table-row"><div class="name">กลุ่ม M — รวม 27 สาขา</div><div class="formula">ประหยัด 886,469 × 50% · เฉลี่ย 9,850 บาท/สาขา</div><div class="kpi-tag" style="background:var(--blue-bg); color:var(--blue);">265,941 บาท/เดือน</div></div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:3%;">
+            <div class="kpi-table-row"><div class="name">กลุ่ม L — รวม 5 สาขา</div><div class="formula">ประหยัด 560,835 × 50% · เฉลี่ย 33,650 บาท/สาขา</div><div class="kpi-tag" style="background:var(--yellow-bg); color:#C99A30;">168,250 บาท/เดือน</div></div>
+            <div class="kpi-table-row"><div class="name">XL — CDC บางนา (1)</div><div class="formula">ประหยัด 514,711 × 50%</div><div class="kpi-tag" style="background:var(--terracotta); color:white;">154,413 บาท/เดือน</div></div>
+          </div>
+        </div>
+        <div class="kpi-table-row" style="background:var(--dark-card); margin-top:1%;"><div class="name" style="color:white;">รวมทั้งหมด 61 สาขา</div><div class="formula" style="color:#bdb6a8;">179,218 + 265,941 + 168,250 + 154,413</div><div class="kpi-tag" style="background:var(--terracotta); color:white;">767,823 บาท/เดือน</div></div>
+        <div class="callout"><svg class="callout-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> สาขา XL ได้เฉลี่ย/สาขาสูงกว่า S ถึง ~24 เท่า — ผูกตรงกับผลประหยัดจริงของแต่ละสาขา ยุติธรรมกว่าแต่ต้องมี Baseline ที่แม่นยำ</div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 9 (NEW) — Grade A-F comparison table -->
+    <section class="slide" data-n="13">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">13 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>ตัวอย่างจำลอง — ทุก Grade</div>
+      <h1>ถ้าไม่ได้ Grade A — เงินจะ<span class="accent">เหลือเท่าไร</span></h1>
+      <div class="subtitle">Model 1 (งบคงที่) เทียบทุก Grade ต่อสาขา · กลุ่ม S / M / L / XL — ข้อมูลจริง พ.ค. 69</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="section-label">งบ Incentive ที่ได้รับต่อสาขา ตาม Grade (บาท/เดือน)</div>
+        <div class="two-col" style="flex:0 0 62%; min-height:0; grid-template-columns:1fr;">
+          <div style="display:flex; flex-direction:column; gap:3%; height:100%; justify-content:space-evenly;">
+            <div class="grade-compare-row">
+              <div class="gc-label">กลุ่ม S <span class="gc-sub">(base 6,100)</span></div>
+              <div class="gc-cell a">A<br><b>6,100</b></div>
+              <div class="gc-cell b">B<br><b>4,300</b></div>
+              <div class="gc-cell c">C<br><b>0</b></div>
+              <div class="gc-cell d">D<br><b>0</b></div>
+              <div class="gc-cell f">F<br><b>0</b></div>
+            </div>
+            <div class="grade-compare-row">
+              <div class="gc-label">กลุ่ม M <span class="gc-sub">(base 11,400)</span></div>
+              <div class="gc-cell a">A<br><b>11,400</b></div>
+              <div class="gc-cell b">B<br><b>8,000</b></div>
+              <div class="gc-cell c">C<br><b>0</b></div>
+              <div class="gc-cell d">D<br><b>0</b></div>
+              <div class="gc-cell f">F<br><b>0</b></div>
+            </div>
+            <div class="grade-compare-row">
+              <div class="gc-label">กลุ่ม L <span class="gc-sub">(base 30,300)</span></div>
+              <div class="gc-cell a">A<br><b>30,300</b></div>
+              <div class="gc-cell b">B<br><b>21,200</b></div>
+              <div class="gc-cell c">C<br><b>0</b></div>
+              <div class="gc-cell d">D<br><b>0</b></div>
+              <div class="gc-cell f">F<br><b>0</b></div>
+            </div>
+            <div class="grade-compare-row">
+              <div class="gc-label">XL <span class="gc-sub">(CDC บางนา · base 139,200)</span></div>
+              <div class="gc-cell a">A<br><b>139,200</b></div>
+              <div class="gc-cell b">B<br><b>97,400</b></div>
+              <div class="gc-cell c">C<br><b>0</b></div>
+              <div class="gc-cell d">D<br><b>0</b></div>
+              <div class="gc-cell f">F<br><b>0</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="callout"><svg class="callout-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> C ลงมาคือ "ไม่ได้เลย" ในทุกกลุ่ม — ถ้าอยากให้ D/F มีบทลงโทษเพิ่มเติม (หักเงินเดือน/ขึ้น Action Plan) ต้องกำหนดแยกจากงบ Incentive นี้</div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 10 (NEW) — Why L gets more explained -->
+    <section class="slide" data-n="14">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">14 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>คำอธิบาย — เตรียมตอบคำถาม</div>
+      <h1>ทำไม XL ได้มากกว่า S — <span class="accent">% เท่ากันทุกกลุ่ม</span></h1>
+      <div class="subtitle">Model 2 (Gain Sharing) ไม่ได้ให้สาขาใหญ่ "ได้เปรียบ" — แต่จ่ายตามสัดส่วนรายได้ที่บริหารจริง</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="section-label">งบ Incentive ที่ได้ คิดเป็น % ของรายได้สาขา — เท่ากันทุกกลุ่ม (0.89%)</div>
+        <div class="two-col" style="flex:0 0 56%; min-height:0; grid-template-columns:1fr;">
+          <div style="display:flex; flex-direction:column; gap:3%; height:100%; justify-content:space-evenly;">
+            <div class="kpi-table-row" style="display:grid; grid-template-columns:1.2fr 1fr 1fr 1fr; align-items:center; gap:1%;">
+              <div class="name">กลุ่ม S — เฉลี่ย/สาขา</div>
+              <div class="formula">รายได้ 715,761 บาท</div>
+              <div class="formula">ประหยัด 12,802 บาท</div>
+              <div class="kpi-tag" style="background:var(--green-bg); color:var(--green); justify-self:start;">งบ Incentive 6,401 บาท = 0.89%</div>
+            </div>
+            <div class="kpi-table-row" style="display:grid; grid-template-columns:1.2fr 1fr 1fr 1fr; align-items:center; gap:1%;">
+              <div class="name">กลุ่ม M — เฉลี่ย/สาขา</div>
+              <div class="formula">รายได้ 1,101,449 บาท</div>
+              <div class="formula">ประหยัด 19,699 บาท</div>
+              <div class="kpi-tag" style="background:var(--blue-bg); color:var(--blue); justify-self:start;">งบ Incentive 9,850 บาท = 0.89%</div>
+            </div>
+            <div class="kpi-table-row" style="display:grid; grid-template-columns:1.2fr 1fr 1fr 1fr; align-items:center; gap:1%;">
+              <div class="name">กลุ่ม L — เฉลี่ย/สาขา</div>
+              <div class="formula">รายได้ 3,762,958 บาท</div>
+              <div class="formula">ประหยัด 67,300 บาท</div>
+              <div class="kpi-tag" style="background:var(--yellow-bg); color:#C99A30; justify-self:start;">งบ Incentive 33,650 บาท = 0.89%</div>
+            </div>
+            <div class="kpi-table-row" style="display:grid; grid-template-columns:1.2fr 1fr 1fr 1fr; align-items:center; gap:1%;">
+              <div class="name">XL — CDC บางนา</div>
+              <div class="formula">รายได้ 17,267,430 บาท</div>
+              <div class="formula">ประหยัด 308,826 บาท</div>
+              <div class="kpi-tag" style="background:var(--terracotta); color:white; justify-self:start;">งบ Incentive 154,413 บาท = 0.89%</div>
+            </div>
+          </div>
+        </div>
+        <div class="callout"><svg class="callout-icon" viewBox="0 0 24 24"><path d="M12 2a6 6 0 0 0-4 10.5c.7.6 1 1.3 1 2.5h6c0-1.2.3-1.9 1-2.5A6 6 0 0 0 12 2z"/><path d="M9 18h6"/><path d="M10 22h4"/></svg> สรุปให้ตอบในห้องประชุม: ทุกสาขาได้ <b>0.89% ของรายได้ตัวเองเท่ากันหมด</b> — XL/L ได้บาทมากกว่าเพราะบริหารเงินก้อนใหญ่กว่า ไม่ใช่เพราะกฎเอื้อสาขาใหญ่</div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 11 (NEW) — Driver-level example -->
+    <section class="slide" data-n="15">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">15 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>ตัวอย่างจำลอง — ระดับ พขร.</div>
+      <h1>พขร. รายคัน — ได้กี่<span class="accent">บาทต่อเดือน</span></h1>
+      <div class="subtitle">จำนวนรถจริง พ.ค. 69: รถบริษัท 213 · รถร่วม 331 · รถเสริม 39 คัน (รวม 583 คัน)</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="size-grid" style="flex:0 0 34%;">
+          <div class="size-card">
+            <div class="size-tag">รถบริษัท · 213 คัน</div>
+            <div class="size-name">878 บาท</div>
+            <div class="size-desc">เฉลี่ย/คัน/เดือน (คิดรวมสัดส่วนเดียวกันทุกคัน)</div>
+          </div>
+          <div class="size-card m">
+            <div class="size-tag">รถร่วม · 331 คัน</div>
+            <div class="size-name">878 บาท</div>
+            <div class="size-desc">เฉลี่ย/คัน/เดือน (รวมบุคคลธรรมดา+นิติบุคคล)</div>
+          </div>
+          <div class="size-card l">
+            <div class="size-tag">รถเสริมชั่วคราว · 39 คัน</div>
+            <div class="size-name">878 บาท</div>
+            <div class="size-desc">เฉลี่ย/คัน/เดือน</div>
+          </div>
+        </div>
+        <div class="section-label" style="margin-top:.2%;">ที่มา: งบ Incentive พขร. รวม 511,882 บาท/เดือน (40% ของ งบ Incentive รวม 1,279,704)</div>
+        <div class="two-col" style="flex:0 0 36%; min-height:0;">
+          <div style="display:flex; flex-direction:column; gap:3%;">
+            <div class="kpi-table-row"><div class="name">รถบริษัท — 213 คัน</div><div class="formula">แบ่งตามสัดส่วนจำนวนรถ 36.5%</div><div class="kpi-tag" style="background:var(--green-bg); color:var(--green);">187,017 บาท/เดือน</div></div>
+            <div class="kpi-table-row"><div class="name">รถร่วม — 331 คัน</div><div class="formula">แบ่งตามสัดส่วนจำนวนรถ 56.8%</div><div class="kpi-tag" style="background:var(--blue-bg); color:var(--blue);">290,622 บาท/เดือน</div></div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:3%;">
+            <div class="kpi-table-row"><div class="name">รถเสริมชั่วคราว — 39 คัน</div><div class="formula">แบ่งตามสัดส่วนจำนวนรถ 6.7%</div><div class="kpi-tag" style="background:var(--yellow-bg); color:#C99A30;">34,243 บาท/เดือน</div></div>
+            <div class="kpi-table-row" style="background:var(--dark-card);"><div class="name" style="color:white;">รวม 583 คัน</div><div class="formula" style="color:#bdb6a8;">187,017 + 290,622 + 34,243</div><div class="kpi-tag" style="background:var(--terracotta); color:white;">511,882 บาท/เดือน</div></div>
+          </div>
+        </div>
+        <div class="callout" style="background:var(--dark-card);"><svg class="callout-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ตัวอย่างนี้คิดต่อคันเท่ากันทุกประเภท — สไลด์หน้าเสนอว่าต้นทุนที่แบกเองต่างกัน ควรแยกสูตรไม่คิดเฉลี่ยเท่ากัน</div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 13 (NEW) — Driver type split: Employee vs Owner-operator -->
+    <section class="slide" data-n="16">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">16 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>ประเด็นเพิ่มเติม — เพื่อพิจารณา</div>
+      <h1>พขร. 2 ประเภท ต้นทุนคนละแบบ — <span class="accent">ควรคนละสูตร</span></h1>
+      <div class="subtitle">ตอนนี้เดครวมพขร.เป็นกลุ่มเดียว — แต่ต้นทุนและ scope งานที่แบกรับต่างกันจริง</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="section-label">2 ประเภท พขร. ที่มีอยู่จริงในระบบ</div>
+        <div class="two-col" style="flex:0 0 50%; min-height:0;">
+          <div class="colcard branch">
+            <div class="head"><div class="tag">EMPLOYEE DRIVER</div><div class="ctitle">พขร. พนักงาน</div><div class="csub">ขับรถบริษัทอย่างเดียว — เงินเดือนประจำ</div></div>
+            <div class="body">
+              <div class="li-item"><div class="t">รถที่ขับ</div><div class="d">รถบริษัทเท่านั้น — ไม่มีค่าใช้จ่ายรถส่วนตัว</div></div>
+              <div class="li-item"><div class="t">ต้นทุนที่แบกเอง</div><div class="d">ไม่มี — บริษัทออกค่ารถ ค่าน้ำมัน ค่าซ่อม</div></div>
+              <div class="li-item"><div class="t">ลักษณะรายได้</div><div class="d">เงินเดือนประจำ + Incentive เสริม</div></div>
+              <div class="li-item"><div class="t">Scope งาน</div><div class="d">ตามเส้นทาง/ตารางที่บริษัทกำหนด</div></div>
+            </div>
+          </div>
+          <div class="colcard driver">
+            <div class="head"><div class="tag">OWNER-OPERATOR</div><div class="ctitle">พขร. ผู้ประกอบการ / รถร่วม</div><div class="csub">ขับรถตัวเอง — ผ่อนกับบริษัท หรือรถเสริม</div></div>
+            <div class="body">
+              <div class="li-item"><div class="t">รถที่ขับ</div><div class="d">รถผ่อนกับบริษัท หรือรถเสริมของตัวเอง</div></div>
+              <div class="li-item"><div class="t">ต้นทุนที่แบกเอง</div><div class="d">ค่าผ่อนรถ + ค่าน้ำมัน + ค่าซ่อมบำรุง</div></div>
+              <div class="li-item"><div class="t">ลักษณะรายได้</div><div class="d">ค่าขนส่ง/เที่ยว + Incentive — ไม่มีเงินเดือนประจำ</div></div>
+              <div class="li-item"><div class="t">Scope งาน</div><div class="d">อาจขับเสริม Linehaul/รถนอกแผนได้ (กรณีฉุกเฉินขับรถบริษัทต้องขออนุมัติ)</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="callout" style="background:var(--dark-card);"><svg class="callout-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ใช้สูตร Incentive เดียวกันทั้ง 2 กลุ่ม อาจไม่แฟร์ — ต้นทุนที่แบกรับต่างกันจริง ไม่ใช่แค่ขนาดสาขา</div>
+        <div class="section-label" style="margin-top:.3%;">ข้อเสนอ: แยกสูตร — 2 ทางเลือกที่อาจพิจารณา</div>
+        <div class="option-card">
+          <div class="otitle">1 · ใช้ งบ Incentive รวมเดียวกัน แต่ปรับน้ำหนัก/สัดส่วน KPI ตามประเภท</div>
+          <div class="odesc">งบ Incentive พขร. 511,882 บาทเดิมไม่แยก แต่ปรับสูตรคำนวณให้สะท้อนต้นทุนที่ต่างกันของแต่ละกลุ่ม</div>
+        </div>
+        <div class="option-card">
+          <div class="otitle">2 · แยก งบ Incentive ย่อยตั้งแต่ต้น ตามสัดส่วนจำนวนรถจริงของแต่ละประเภท</div>
+          <div class="odesc">พขร.พนักงาน และพขร.ผู้ประกอบการ มีงบ Incentive และ Threshold ของตัวเอง ไม่ปนกัน</div>
+        </div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 12 (NEW) — Intra-branch split -->
+    <section class="slide" data-n="17">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">17 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>ประเด็นเพิ่มเติม — เพื่อพิจารณา</div>
+      <h1>งบ Incentive สาขาเล็ก — หารในทีม<span class="accent">เหลือคนละเท่าไร</span></h1>
+      <div class="subtitle">ตัวอย่าง: สาขากลุ่ม S, Grade A, Model 2 — งบ Incentive 6,401 บาท/เดือน (ข้อมูลจริง พ.ค. 69)</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="section-label">สมมติทีมในสาขา: DC Leader 1 คน + พนักงาน 4 คน</div>
+        <div class="two-col" style="flex:0 0 30%; grid-template-columns:1fr 1fr;">
+          <div class="stat-card" style="border-bottom-color:var(--terracotta);">
+            <div class="stat-num" style="font-size:2.1vw;">1,920</div>
+            <div class="stat-label">DC Leader (30%)</div>
+            <div class="stat-sub">บาท/เดือน</div>
+          </div>
+          <div class="stat-card gold">
+            <div class="stat-num" style="font-size:2.1vw;">1,120</div>
+            <div class="stat-label">พนักงาน 4 คน แบ่งเท่ากัน (70%)</div>
+            <div class="stat-sub">บาท/คน/เดือน</div>
+          </div>
+        </div>
+        <div class="callout" style="background:var(--dark-card);"><svg class="callout-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> 1,120 บาท/คน/เดือน อาจไม่จูงใจพอสำหรับสาขาเล็ก — ควรคุยเรื่อง <b>Floor (พื้นขั้นต่ำ)</b> หรือปรับสัดส่วนงบ Incentive ให้สาขาเล็กได้มากกว่านี้ในทางปฏิบัติ</div>
+        <div class="section-label" style="margin-top:.3%;">ทางเลือกที่อาจพิจารณา</div>
+        <div class="option-card">
+          <div class="otitle">1 · ตั้ง งบ Incentive ขั้นต่ำต่อสาขา (Floor)</div>
+          <div class="odesc">ไม่ว่าผลประหยัดจะน้อยแค่ไหน สาขาที่ได้ Grade A ขึ้นไป รับ งบ Incentive ขั้นต่ำที่กำหนด</div>
+        </div>
+        <div class="option-card">
+          <div class="otitle">2 · ปรับ % แบ่งงบ Incentive ตามขนาด (สาขาเล็กได้ % สูงกว่า)</div>
+          <div class="odesc">เช่น S ได้สัดส่วนงบ 70%, M 50%, L 40% ของผลประหยัด เพื่อชดเชยฐานที่เล็ก</div>
+        </div>
+        <div class="option-card">
+          <div class="otitle">3 · ใช้ Model 1 (งบคงที่) กับสาขา S เท่านั้น</div>
+          <div class="odesc">สาขาเล็กใช้งบคงที่ที่คุมเพดานขั้นต่ำได้ ส่วน M/L ค่อย migrate ไป Gain Sharing</div>
+        </div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 13b (NEW) — Detailed historical data request -->
+    <section class="slide" data-n="18">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">18 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>ใบสั่งงาน — หลังประชุม</div>
+      <h1>ข้อมูลย้อนหลังที่ต้อง<span class="accent">ไปดึงจากระบบจริง</span></h1>
+      <div class="subtitle">แยกตามคนรับผิดชอบ — ใช้คำนวณ Baseline ก่อนล็อก Threshold จริง</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="checklist-grid" style="flex:0 0 64%;">
+          <div class="check-card">
+            <div class="chead"><div class="cicon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="ctitle2">ทีมการเงิน/บัญชี — ย้อนหลัง 3-6 เดือน</div></div>
+            <ul class="check-list">
+              <li>ยอดขาย/รายได้ ย้อนหลังรายเดือน แยกรายสาขา (AB + CC)</li>
+              <li>ต้นทุนค่าจ้างรถ ย้อนหลังรายสาขา (รถบริษัท vs รถร่วม)</li>
+              <li>เงินเดือน/ค่าจ้างปัจจุบันแต่ละตำแหน่ง (เช็คผลกระทบฐานเดิม)</li>
+            </ul>
+          </div>
+          <div class="check-card">
+            <div class="chead"><div class="cicon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><div class="ctitle2">ทีมปฏิบัติการ — ย้อนหลัง 3-6 เดือน</div></div>
+            <ul class="check-list">
+              <li>จำนวนบิลเข้า-บิลออก ย้อนหลังรายสาขา</li>
+              <li>% จัดส่งสำเร็จ และ % เสียหาย/สูญหาย ย้อนหลังรายสาขา</li>
+              <li>Cut-off time ขนย้ายจริงของแต่ละสาขา (ไม่เท่ากัน)</li>
+            </ul>
+          </div>
+          <div class="check-card">
+            <div class="chead"><div class="cicon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="ctitle2">ทีม HR / ยานยนต์ — ข้อมูลปัจจุบัน</div></div>
+            <ul class="check-list">
+              <li>จำนวนรถกระจายจริงต่อสาขา แยก AB/CC (ไม่ใช่ตัวสมมติ)</li>
+              <li>รายชื่อ พขร. แยกพนักงาน vs ผู้ประกอบการ ต่อสาขา</li>
+              <li>จำนวนพนักงานแต่ละสาขา แยกตำแหน่ง/Level (LV4-8)</li>
+            </ul>
+          </div>
+          <div class="check-card">
+            <div class="chead"><div class="cicon"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg></div><div class="ctitle2">ทีม IT/ระบบ — สำรวจ Data Source</div></div>
+            <ul class="check-list">
+              <li>ระบบที่เก็บข้อมูลแต่ละตัวอยู่ตอนนี้ (SAP/Excel/Manual)</li>
+              <li>ความถี่ที่ดึงข้อมูลอัตโนมัติได้ vs ต้องกรอกมือ</li>
+              <li>เจ้าของข้อมูลแต่ละระบบ (Contact point)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout"><svg class="callout-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> แนะนำ: ย้อนหลังขั้นต่ำ 3 เดือนพอเริ่ม Sim ได้ แต่ 6 เดือนจะเห็น pattern ตามฤดูกาล/เทศกาลชัดกว่า เหมาะกับการตั้ง Threshold ที่แม่นยำ</div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 13 (orig 9) — Data to prepare for sim -->
+    <section class="slide" data-n="19">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">19 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>เตรียมสำหรับประชุมทีม</div>
+      <h1>ข้อมูลจริงที่ต้อง<span class="accent">เตรียมมา Sim</span></h1>
+      <div class="subtitle">แทนตัวเลขสมมติในเดคนี้ด้วยข้อมูลจริงของบริษัท</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="checklist-grid">
+          <div class="check-card">
+            <div class="chead"><div class="cicon"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg></div><div class="ctitle2">การเงิน / งบ</div></div>
+            <ul class="check-list">
+              <li>ยอดขายย้อนหลัง 3-6 เดือน (มีข้อมูล พ.ค. 69 เดือนเดียวแล้ว — ขอเพิ่มเดือนอื่น)</li>
+              <li>งบ งบ Incentive ที่อนุมัติได้ต่อเดือน</li>
+              <li>อัตราค่าจ้างรถต่อเที่ยว (รถบริษัท vs รถร่วม)</li>
+            </ul>
+          </div>
+          <div class="check-card">
+            <div class="chead"><div class="cicon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div><div class="ctitle2">เกณฑ์ KPI</div></div>
+            <ul class="check-list">
+              <li>Threshold A/B/C/D/F จริงของแต่ละตัวชี้วัด</li>
+              <li>% จัดส่งสำเร็จ และ % เสียหาย เป้าหมายที่ต้องการ</li>
+              <li>ข้อมูลขนาดสาขา (คน/รถ/บิล) เพื่อจัดกลุ่ม</li>
+            </ul>
+          </div>
+          <div class="check-card">
+            <div class="chead"><div class="cicon"><svg viewBox="0 0 24 24"><path d="M3 17h13V6H3v11z"/><path d="M16 9h4l3 4v4h-7V9z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg></div><div class="ctitle2">Scope พขร.</div></div>
+            <ul class="check-list">
+              <li>ยืนยัน scope = รถกระจายอย่างเดียว หรือรวม Linehaul</li>
+              <li>จำนวน พขร. พนักงาน vs ผู้ประกอบการ ปัจจุบัน</li>
+              <li>Cut-off time ของแต่ละสาขา (ไม่เท่ากัน)</li>
+            </ul>
+          </div>
+          <div class="check-card">
+            <div class="chead"><div class="cicon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="ctitle2">สัดส่วน &amp; โครงสร้าง</div></div>
+            <ul class="check-list">
+              <li>สัดส่วนแบ่ง งบ Incentive สาขา : พขร. (สมมติ 60:40)</li>
+              <li>รอบจ่าย Incentive (รายเดือน/ไตรมาส)</li>
+              <li>บทบาท CDC บางนา ในระบบนี้</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 14 (NEW) — Assumption warning -->
+    <section class="slide" data-n="20">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">20 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>โปรดอ่านก่อนใช้ตัวเลขในเดคนี้</div>
+      <h1>มี<span class="accent">ข้อมูลจริง</span>บางส่วนแล้ว — ที่เหลือยังรอ confirm</h1>
+      <div class="subtitle">ยอดขาย/ต้นทุน/จำนวนรถ เดือน พ.ค. 69 ใช้ของจริงแล้ว — ส่วนที่เหลือยังเป็นสมมติ</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="section-label">สถานะตัวเลขในเดคนี้ — อันไหนจริงแล้ว อันไหนรอ confirm</div>
+        <div class="checklist-grid" style="flex:0 0 60%;">
+          <div class="check-card">
+            <div class="chead"><div class="cicon"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg></div><div class="ctitle2">การเงิน</div></div>
+            <ul class="check-list">
+              <li>ยอดขาย 85.86 ล้านบาท · ต้นทุน 22.98% — ข้อมูลจริง พ.ค. 69 (เดือนเดียว)</li>
+              <li>ฐานยอดขาย (ไฟล์สาขา) vs ฐานต้นทุน (ไฟล์รถ) เป็นคนละมิติ — วิธีผสม 2 ฐานนี้ยังรอ confirm ตรรกะกับทีม</li>
+              <li>แบ่งงบ Incentive 50:50 (บริษัท:Incentive) — ยังไม่ confirm</li>
+            </ul>
+          </div>
+          <div class="check-card">
+            <div class="chead"><div class="cicon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="ctitle2">โครงสร้างสาขา</div></div>
+            <ul class="check-list">
+              <li>S=28 / M=27 / L=5 / XL=1 (CDC บางนา) — ข้อมูลจริงจากจำนวนรถ</li>
+              <li>Threshold ตัดกลุ่ม (≤5/6-15/&gt;15 คัน) — เกณฑ์ที่เสนอ ยังไม่ confirm</li>
+              <li>ทีมในสาขา 1 DC Leader + 4 พนักงาน — สมมติ</li>
+            </ul>
+          </div>
+          <div class="check-card">
+            <div class="chead"><div class="cicon"><svg viewBox="0 0 24 24"><path d="M3 17h13V6H3v11z"/><path d="M16 9h4l3 4v4h-7V9z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg></div><div class="ctitle2">พขร. &amp; รถ</div></div>
+            <ul class="check-list">
+              <li>จำนวนรถจริง: รถบริษัท 213 · รถร่วม 331 · รถเสริม 39 (รวม 583 คัน)</li>
+              <li>สัดส่วน งบ Incentive สาขา:พขร. = 60:40 — ยังไม่ confirm</li>
+              <li>Scope พขร. (รถกระจายอย่างเดียว/รวม Linehaul) — รอตัดสินใจ</li>
+            </ul>
+          </div>
+          <div class="check-card">
+            <div class="chead"><div class="cicon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div><div class="ctitle2">เกณฑ์ &amp; Grade</div></div>
+            <ul class="check-list">
+              <li>Threshold A/B/C/D/F ของแต่ละ KPI — ยังไม่ confirm</li>
+              <li>DC Leader 30% / พนักงาน 70% — สมมติเพื่อตัวอย่าง</li>
+              <li>บทลงโทษ Grade D/F — ยังไม่กำหนดรายละเอียด</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout" style="background:var(--dark-card);"><svg class="callout-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ตัวเลขข้อมูลจริงเป็นของเดือน พ.ค. 69 เดือนเดียว — ยังไม่สะท้อนค่าเฉลี่ยรายปี ห้ามนำไปอ้างอิงหรือสื่อสารกับสาขา/พขร. จนกว่าจะมีข้อมูลครบและการอนุมัติอย่างเป็นทางการ</div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- SLIDE 15 (orig 10) — Roadmap -->
+    <section class="slide" data-n="21">
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="brand"><div class="logo">N</div><div class="brand-text"><div class="name">NiM Express</div><div class="sub">Incentive System</div></div></div>
+        <div class="pagenum">21 / 22</div>
+      </div>
+      <div class="eyebrow"><span class="dot"></span>Roadmap การดำเนินการ</div>
+      <h1>เริ่ม ก.ค. 69 — Rollout ครบ <span class="accent">61 สาขา</span> ส.ค. 69</h1>
+      <div class="subtitle">วางแผน 1 เดือน — Rollout พร้อมกันทันที — ประเมิน Migrate พ.ย. 69</div>
+      <div class="hr"></div>
+      <div class="content">
+        <div class="section-label">3 ขั้นตอนการดำเนินการ</div>
+        <div class="step-row" style="flex:0 0 42%;">
+          <div class="step-card s1">
+            <div class="step-head">STEP 1 · วางแผนระบบ</div>
+            <div class="step-title">วางแผนระบบ</div>
+            <div class="step-date">ก.ค. 69</div>
+            <div class="step-body"><ul><li>กำหนดสูตร KPI และ Threshold A/B/C/D/F</li><li>เตรียม Dashboard วัดผลสาขา + พขร.</li><li>สื่อสารทำความเข้าใจกับทุกสาขา</li></ul></div>
+          </div>
+          <div class="step-card s2">
+            <div class="step-head">STEP 2 · Rollout 61 สาขา</div>
+            <div class="step-title">Rollout 61 สาขา</div>
+            <div class="step-date">ส.ค. 69</div>
+            <div class="step-body"><ul><li>เริ่มพร้อมกันทุกสาขา ไม่มี Pilot</li><li>ใช้งบคงที่ — วัดผลจริงทุกเดือน</li><li>จ่าย Incentive รอบแรกตาม Score จริง</li></ul></div>
+          </div>
+          <div class="step-card s3">
+            <div class="step-head">STEP 3 · ประเมิน &amp; Migrate</div>
+            <div class="step-title">ประเมิน &amp; Migrate</div>
+            <div class="step-date">พ.ย. 69+</div>
+            <div class="step-body"><ul><li>รวบรวมข้อมูลจริง 3 เดือน (ส.ค.–ต.ค.)</li><li>พิจารณา Migrate เป็น Gain Sharing</li><li>ปรับ Threshold ให้แม่นยำขึ้นจากข้อมูลจริง</li></ul></div>
+          </div>
+        </div>
+        <div class="section-label" style="margin-top:.4%;">Timeline สุดท้าย</div>
+        <div>
+          <div class="timeline-bar"><div class="tl-seg g">วางแผน</div><div class="tl-seg t">Rollout 61 สาขา</div><div class="tl-seg gr">ประเมิน &amp; Migrate</div></div>
+          <div class="tl-dates"><span>ก.ค. 69</span><span>ส.ค. 69</span><span>พ.ย. 69+</span></div>
+        </div>
+        <div class="approve-box">
+          <div class="approve-title">สิ่งที่ต้องการอนุมัติ / ตัดสินใจ</div>
+          <div class="approve-grid">
+            <div class="approve-item"><div class="approve-num">1</div><div><div class="at">งบ งบ Incentive</div><div class="ad">Fix Budget/เดือน Step 1</div></div></div>
+            <div class="approve-item"><div class="approve-num">2</div><div><div class="at">Threshold KPI</div><div class="ad">ระดับ A/B/C/D/F แต่ละตัวชี้วัด</div></div></div>
+            <div class="approve-item"><div class="approve-num">3</div><div><div class="at">Scope พขร.</div><div class="ad">รถกระจายอย่างเดียว หรือรวม Linehaul</div></div></div>
+            <div class="approve-item"><div class="approve-num">4</div><div><div class="at">สัดส่วนงบ Incentive</div><div class="ad">สาขา vs พขร. (สมมติ 60:40)</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><div class="dot-brand"><span class="d"></span>NiM Express — Incentive System</div><div>2026</div></div>
+    </section>
+
+    <!-- CLOSING SLIDE -->
+    <section class="slide cover-slide" data-n="22">
+      <div class="topbar"></div>
+      <div class="cover-glow"></div>
+      <div class="cover-glow2"></div>
+      <div class="cover-inner">
+        <div class="cover-header">
+          <div class="brand">
+            <div class="logo">N</div>
+            <div class="brand-text"><div class="name" style="color:white;">NiM Express</div><div class="sub" style="color:#8a8478;">Incentive System</div></div>
+          </div>
+          <div class="pagenum" style="color:#8a8478;">22 / 22</div>
+        </div>
+        <div class="cover-eyebrow"><span class="dot" style="background:#f3a785;"></span>สรุปภาพรวม — พร้อมเริ่มดำเนินการ</div>
+        <h1 class="cover-h1">หน้าจอเดียว <span class="accent">เห็นครบ</span> — ทุก<span class="accent2">สาขา ทุก พขร.</span></h1>
+        <div class="cover-sub">เชื่อม KPI → Grade → งบ Incentive → จ่ายจริง ในระบบเดียวกัน — โปร่งใส ตรวจสอบได้ จูงใจตรงจุด</div>
+
+        <div class="mockup-frame">
+          <div class="mockup-titlebar">
+            <div class="mockup-dot" style="background:#e8736b;"></div>
+            <div class="mockup-dot" style="background:#e8c36b;"></div>
+            <div class="mockup-dot" style="background:#7bc99a;"></div>
+            <div class="mockup-titlebar-label">incentive.nimexpress.com — สรุปผลก่อน Rollout</div>
+            <div style="flex:1;"></div>
+            <div style="font-size:.66vw; color:#6b655a; padding-right:.3vw;">ภาพตัวอย่าง UI — ไม่ใช่ข้อมูลจริง</div>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-kpi-row">
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">สาขาครอบคลุม</div>
+                <div class="mockup-kpi-val t">61 สาขา</div>
+                <div class="mockup-kpi-trend">NiM Express + Seal Coldchain</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">พขร. ที่ร่วมระบบ</div>
+                <div class="mockup-kpi-val g">583 คัน</div>
+                <div class="mockup-kpi-trend">S/M/L ครบทุกกลุ่ม</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">งบ Incentive/เดือน</div>
+                <div class="mockup-kpi-val gr">฿1,279,704</div>
+                <div class="mockup-kpi-trend up">▲ ประหยัด 3% ของต้นทุน</div>
+              </div>
+              <div class="mockup-kpi">
+                <div class="mockup-kpi-label">Rollout เริ่ม</div>
+                <div class="mockup-kpi-val">ส.ค. 2569</div>
+                <div class="mockup-kpi-trend">พร้อมทุกสาขาทันที</div>
+              </div>
+            </div>
+            <div class="mockup-main" style="grid-template-columns:1fr 1fr 1fr;">
+              <div class="mockup-panel">
+                <div class="mockup-panel-title">วงจรระบบ <span class="tag">รายเดือน</span></div>
+                <div class="mockup-list" style="justify-content:flex-start; gap:.9vw;">
+                  <div class="mockup-list-row"><div class="mockup-rank gold">1</div><div class="mockup-list-name">วัดผล KPI สาขา + พขร.</div></div>
+                  <div class="mockup-list-row"><div class="mockup-rank gold">2</div><div class="mockup-list-name">ให้ Grade A–F อัตโนมัติ</div></div>
+                  <div class="mockup-list-row"><div class="mockup-rank gold">3</div><div class="mockup-list-name">คำนวณงบ Incentive ตามผลจริง</div></div>
+                  <div class="mockup-list-row"><div class="mockup-rank gold">4</div><div class="mockup-list-name">จ่าย Incentive ทุกรอบ</div></div>
+                </div>
+              </div>
+              <div class="mockup-panel">
+                <div class="mockup-panel-title">แบ่งงบ Incentive หลัก <span class="tag">ตามผลงาน</span></div>
+                <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:.8vw;">
+                  <div class="mockup-splitbar" style="height:1.8vw;">
+                    <div style="background:var(--terracotta); flex:6;">สาขา 60%</div>
+                    <div style="background:var(--gold); flex:4;">พขร. 40%</div>
+                  </div>
+                  <div style="font-size:.7vw; color:#8a8478; text-align:center;">฿767,823 · ฿511,882 ต่อเดือน</div>
+                </div>
+              </div>
+              <div class="mockup-panel">
+                <div class="mockup-panel-title">ขั้นต่อไป <span class="tag">15.ก.ค.–15.ส.ค.</span></div>
+                <div class="mockup-list" style="justify-content:flex-start; gap:.7vw;">
+                  <div class="mockup-list-row"><div class="mockup-rank" style="background:var(--terracotta); color:white;">✓</div><div class="mockup-list-name">ยืนยันงบ + Threshold</div></div>
+                  <div class="mockup-list-row"><div class="mockup-rank" style="background:#3a322a;">✓</div><div class="mockup-list-name">เตรียม Dashboard จริง</div></div>
+                  <div class="mockup-list-row"><div class="mockup-rank" style="background:#3a322a;">✓</div><div class="mockup-list-name">สื่อสารทุกสาขา</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="closing-cta">
+          <div>
+            <div class="closing-cta-text">พร้อมเริ่มประชุมทีมเพื่อยืนยันตัวเลขจริง</div>
+            <div class="closing-cta-sub">ทุกตัวอย่างในเดคนี้คือตุ๊กตา — รอข้อมูลจริงเพื่อ Rollout จริงตามไทม์ไลน์</div>
+          </div>
+          <div class="closing-cta-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="dots" id="dots"></div>
+<div class="nav">
+  <button id="prevBtn">← ก่อนหน้า</button>
+  <button id="nextBtn">ถัดไป →</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const dotsWrap = document.getElementById('dots');
+  let cur = 0;
+  slides.forEach((s,i)=>{
+    const d = document.createElement('span');
+    if(i===0) d.classList.add('on');
+    d.addEventListener('click', ()=>go(i));
+    dotsWrap.appendChild(d);
+  });
+  const dots = dotsWrap.querySelectorAll('span');
+  function go(i){
+    if(i<0) i=0;
+    if(i>=slides.length) i=slides.length-1;
+    slides[cur].classList.remove('active');
+    dots[cur].classList.remove('on');
+    cur = i;
+    slides[cur].classList.add('active');
+    dots[cur].classList.add('on');
+  }
+  document.getElementById('prevBtn').addEventListener('click', ()=>go(cur-1));
+  document.getElementById('nextBtn').addEventListener('click', ()=>go(cur+1));
+  document.addEventListener('keydown', (e)=>{
+    if(e.key==='ArrowRight' || e.key===' ') go(cur+1);
+    if(e.key==='ArrowLeft') go(cur-1);
+  });
+</script>
+</body>
+</html>
